@@ -3,21 +3,402 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión Boulevard - Administración de Locales</title>
+    <title>Gestión Boulevard - Arriendos y Gastos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-        .card { background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); padding: 2rem; margin-bottom: 1.5rem; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-2px); }
-        input, select { width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 8px; margin-top: 0.5rem; transition: all 0.2s; font-size: 0.95rem; }
-        input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
-        button { cursor: pointer; transition: all 0.2s; font-weight: 600; border-radius: 8px; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.75rem 1.5rem; border: none; font-weight: 600; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; }
+        .card-custom { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+        .btn-primary { background-color: #2563eb; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: all 0.2s; }
+        .btn-primary:hover { background-color: #1d4ed8; transform: translateY(-1px); }
+        .input-field { width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; outline: none; focus:ring-2 focus:ring-blue-500; }
+        .tab-btn { padding: 0.75rem 1.5rem; border-bottom: 2px solid transparent; cursor: pointer; color: #6b7280; font-weight: 500; }
+        .tab-btn.active { border-bottom-color: #2563eb; color: #2563eb; background-color: #eff6ff; }
+        .hidden-section { display: none; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background-color: #f9fafb; text-align: left; padding: 0.75rem; font-size: 0.875rem; color: #374151; border-bottom: 1px solid #e5e7eb; }
+        td { padding: 0.75rem; border-bottom: 1px solid #f3f4f6; font-size: 0.875rem; }
+        .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .badge-uf { background-color: #dbeafe; color: #1e40af; }
+        .badge-pesos { background-color: #dcfce7; color: #166534; }
+    </style>
+</head>
+<body class="p-6">
+
+<div class="max-w-7xl mx-auto">
+    <header class="mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-building mr-2"></i>Gestión Boulevard</h1>
+            <p class="text-gray-500 mt-1">Administración de Locales Comerciales</p>
+        </div>
+        <div class="text-right">
+            <div class="text-sm text-gray-500">UF del Día</div>
+            <div class="flex items-center gap-2">
+                <input type="number" id="valor_uf" class="input-field w-32 text-right font-bold text-blue-600" step="0.01">
+                <button onclick="fetchUF()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition">
+                    <i class="fas fa-sync-alt mr-1"></i> Actualizar
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegación -->
+    <div class="flex border-b border-gray-200 mb-6 bg-white rounded-t-xl overflow-hidden">
+        <button onclick="switchTab('locales')" class="tab-btn active" id="tab-locales"><i class="fas fa-store mr-2"></i>Locales</button>
+        <button onclick="switchTab('gastos-config')" class="tab-btn" id="tab-gastos-config"><i class="fas fa-cogs mr-2"></i>Config. Gastos Fijos</button>
+        <button onclick="switchTab('liquidar')" class="tab-btn" id="tab-liquidar"><i class="fas fa-file-invoice-dollar mr-2"></i>Liquidar Mes</button>
+    </div>
+
+    <!-- Sección: Locales -->
+    <div id="sec-locales" class="section-content">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="card-custom p-6">
+                <h3 class="font-bold text-lg mb-4 text-gray-700">Nuevo Local</h3>
+                <div class="space-y-3">
+                    <input type="text" id="local_nombre" placeholder="Nombre del Local (ej: Local 101)" class="input-field">
+                    <input type="number" id="local_metros" placeholder="Metros Cuadrados (m²)" class="input-field">
+                    <input type="number" id="local_uf_base" placeholder="Valor Arriendo Base (UF)" class="input-field">
+                    <button onclick="agregarLocal()" class="btn-primary w-full mt-2"><i class="fas fa-plus mr-2"></i>Guardar Local</button>
+                </div>
+            </div>
+            <div class="md:col-span-2 card-custom p-6">
+                <h3 class="font-bold text-lg mb-4 text-gray-700">Listado de Locales</h3>
+                <div class="overflow-x-auto">
+                    <table id="tabla_locales">
+                        <thead><tr><th>Nombre</th><th>Metros (m²)</th><th>Arriendo Base (UF)</th><th>Acciones</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                    <p id="msg_sin_locales" class="text-center text-gray-400 py-8">No hay locales registrados aún.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección: Config Gastos Fijos -->
+    <div id="sec-gastos-config" class="section-content hidden-section">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="card-custom p-6">
+                <h3 class="font-bold text-lg mb-4 text-gray-700">Agregar Gasto Fijo Mensual</h3>
+                <div class="space-y-3">
+                    <input type="text" id="gasto_nombre" placeholder="Concepto (ej: Conserje, Ascensor)" class="input-field">
+                    <select id="gasto_tipo" class="input-field">
+                        <option value="UF">Valor en UF</option>
+                        <option value="CLP">Valor en Pesos (CLP)</option>
+                    </select>
+                    <input type="number" id="gasto_valor" placeholder="Monto" class="input-field">
+                    <button onclick="agregarGastoFijo()" class="btn-primary w-full mt-2"><i class="fas fa-save mr-2"></i>Guardar Gasto</button>
+                </div>
+            </div>
+            <div class="md:col-span-2 card-custom p-6">
+                <h3 class="font-bold text-lg mb-4 text-gray-700">Gastos Fijos Configurados</h3>
+                <p class="text-sm text-gray-500 mb-4">Estos gastos se prorratearán automáticamente según los m² de cada local.</p>
+                <table id="tabla_gastos_fijos">
+                    <thead><tr><th>Concepto</th><th>Tipo</th><th>Valor Original</th><th>Acciones</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                <p id="msg_sin_gastos" class="text-center text-gray-400 py-8">No hay gastos fijos configurados.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección: Liquidar -->
+    <div id="sec-liquidar" class="section-content hidden-section">
+        <div class="card-custom p-8 text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Generar Liquidación Mensual</h2>
+            <div class="flex justify-center gap-4 mb-6">
+                <input type="month" id="mes_liquidacion" class="input-field w-48">
+                <button onclick="generarLiquidacion()" class="btn-primary text-lg px-8"><i class="fas fa-calculator mr-2"></i>Calcular y Ver Detalle</button>
+            </div>
+            
+            <div id="resultado_liquidacion" class="hidden text-left mt-8 border-t pt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-700">Resumen del Prorrateo</h3>
+                    <button onclick="descargarPDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow"><i class="fas fa-file-pdf mr-2"></i>Descargar PDF Detallado</button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <div>
+                        <span class="block text-sm text-gray-500">Total Gastos Comunes (UF)</span>
+                        <span id="res_total_uf" class="text-xl font-bold text-blue-800">0.00</span>
+                    </div>
+                    <div>
+                        <span class="block text-sm text-gray-500">Total Metros Proyecto</span>
+                        <span id="res_total_metros" class="text-xl font-bold text-blue-800">0</span> m²
+                    </div>
+                    <div class="bg-white p-2 rounded border border-blue-200">
+                        <span class="block text-sm text-gray-500">Costo por Metro (UF)</span>
+                        <span id="res_costo_m2" class="text-xl font-bold text-blue-600">0.0000</span> UF/m²
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table id="tabla_resultados" class="w-full bg-white shadow rounded">
+                        <thead class="bg-gray-800 text-white">
+                            <tr>
+                                <th class="p-3 text-left">Local</th>
+                                <th class="p-3 text-right">Metros</th>
+                                <th class="p-3 text-right">% Participación</th>
+                                <th class="p-3 text-right">Gasto Common (UF)</th>
+                                <th class="p-3 text-right">Arriendo + IVA</th>
+                                <th class="p-3 text-right">TOTAL A PAGAR</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body_resultados"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let locales = JSON.parse(localStorage.getItem('gb_locales')) || [];
+    let gastosFijos = JSON.parse(localStorage.getItem('gb_gastos_fijos')) || [];
+    let ultimaLiquidacion = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderLocales();
+        renderGastosFijos();
+        fetchUF();
+        document.getElementById('mes_liquidacion').valueAsDate = new Date();
+    });
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden-section'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('sec-' + tabId).classList.remove('hidden-section');
+        document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    async function fetchUF() {
+        const inputUF = document.getElementById('valor_uf');
+        try {
+            const res = await fetch('https://mindicador.cl/api/uf');
+            const data = await res.json();
+            inputUF.value = data.serie[0].valor.toFixed(2);
+        } catch (e) {
+            inputUF.value = "36000";
+            alert("No se pudo obtener la UF. Ingresa valor manual.");
+        }
+    }
+
+    function getUF() {
+        return parseFloat(document.getElementById('valor_uf').value) || 0;
+    }
+
+    function agregarLocal() {
+        const nombre = document.getElementById('local_nombre').value.trim();
+        const metros = parseFloat(document.getElementById('local_metros').value);
+        const ufBase = parseFloat(document.getElementById('local_uf_base').value);
+
+        if (!nombre || !metros || !ufBase) {
+            alert("Completa todos los campos del local.");
+            return;
+        }
+
+        locales.push({ id: Date.now(), nombre, metros, ufBase });
+        localStorage.setItem('gb_locales', JSON.stringify(locales));
+        
+        document.getElementById('local_nombre').value = '';
+        document.getElementById('local_metros').value = '';
+        document.getElementById('local_uf_base').value = '';
+        
+        renderLocales();
+        alert("Local agregado correctamente");
+    }
+
+    function renderLocales() {
+        const tbody = document.querySelector('#tabla_locales tbody');
+        const msg = document.getElementById('msg_sin_locales');
+        tbody.innerHTML = '';
+
+        if (locales.length === 0) {
+            msg.style.display = 'block';
+            return;
+        }
+        msg.style.display = 'none';
+
+        locales.forEach((loc, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="font-medium text-gray-800">${loc.nombre}</td>
+                <td>${loc.metros} m²</td>
+                <td><span class="badge badge-uf">${loc.ufBase} UF</span></td>
+                <td><button onclick="eliminarLocal(${index})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function eliminarLocal(index) {
+        if(confirm('¿Eliminar este local?')) {
+            locales.splice(index, 1);
+            localStorage.setItem('gb_locales', JSON.stringify(locales));
+            renderLocales();
+        }
+    }
+
+    function agregarGastoFijo() {
+        const nombre = document.getElementById('gasto_nombre').value.trim();
+        const tipo = document.getElementById('gasto_tipo').value;
+        const valor = parseFloat(document.getElementById('gasto_valor').value);
+
+        if (!nombre || !valor) {
+            alert("Completa el concepto y el valor.");
+            return;
+        }
+
+        gastosFijos.push({ id: Date.now(), nombre, tipo, valor });
+        localStorage.setItem('gb_gastos_fijos', JSON.stringify(gastosFijos));
+
+        document.getElementById('gasto_nombre').value = '';
+        document.getElementById('gasto_valor').value = '';
+        
+        renderGastosFijos();
+    }
+
+    function renderGastosFijos() {
+        const tbody = document.querySelector('#tabla_gastos_fijos tbody');
+        const msg = document.getElementById('msg_sin_gastos');
+        tbody.innerHTML = '';
+
+        if (gastosFijos.length === 0) {
+            msg.style.display = 'block';
+            return;
+        }
+        msg.style.display = 'none';
+
+        gastosFijos.forEach((gasto, index) => {
+            const tr = document.createElement('tr');
+            const badgeClass = gasto.tipo === 'UF' ? 'badge-uf' : 'badge-pesos';
+            tr.innerHTML = `
+                <td class="font-medium">${gasto.nombre}</td>
+                <td><span class="badge ${badgeClass}">${gasto.tipo}</span></td>
+                <td>$${gasto.valor.toLocaleString('es-CL')} ${gasto.tipo}</td>
+                <td><button onclick="eliminarGasto(${index})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function eliminarGasto(index) {
+        gastosFijos.splice(index, 1);
+        localStorage.setItem('gb_gastos_fijos', JSON.stringify(gastosFijos));
+        renderGastosFijos();
+    }
+
+    function generarLiquidacion() {
+        if (locales.length === 0) {
+            alert("Registra al menos un local.");
+            return;
+        }
+
+        const ufDelDia = getUF();
+        if (ufDelDia === 0) {
+            alert("La UF no puede ser 0.");
+            return;
+        }
+
+        let totalGastosUF = 0;
+        gastosFijos.forEach(g => {
+            if (g.tipo === 'UF') totalGastosUF += g.valor;
+            else totalGastosUF += (g.valor / ufDelDia);
+        });
+
+        const totalMetros = locales.reduce((sum, loc) => sum + loc.metros, 0);
+        
+        if (totalMetros === 0) {
+            alert("Los metros no pueden ser 0.");
+            return;
+        }
+
+        const factorProrrateo = totalGastosUF / totalMetros;
+        const tbody = document.getElementById('body_resultados');
+        tbody.innerHTML = '';
+        
+        let datosParaPDF = [];
+
+        locales.forEach(loc => {
+            const gastoComun = loc.metros * factorProrrateo;
+            const arriendoConIva = loc.ufBase * 1.19;
+            const totalPagar = gastoComun + arriendoConIva;
+            const porcentaje = (loc.metros / totalMetros) * 100;
+
+            datosParaPDF.push({
+                local: loc.nombre,
+                metros: loc.metros,
+                porcentaje: porcentaje.toFixed(2),
+                gastoComun: gastoComun,
+                arriendo: arriendoConIva,
+                total: totalPagar
+            });
+
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-gray-50 border-b";
+            tr.innerHTML = `
+                <td class="p-3 font-bold text-gray-700">${loc.nombre}</td>
+                <td class="p-3 text-right">${loc.metros}</td>
+                <td class="p-3 text-right text-gray-500">${porcentaje.toFixed(2)}%</td>
+                <td class="p-3 text-right font-medium text-blue-600">${gastoComun.toFixed(4)}</td>
+                <td class="p-3 text-right text-gray-600">${arriendoConIva.toFixed(2)}</td>
+                <td class="p-3 text-right font-bold text-gray-900 bg-gray-100">${totalPagar.toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('res_total_uf').textContent = totalGastosUF.toFixed(2);
+        document.getElementById('res_total_metros').textContent = totalMetros;
+        document.getElementById('res_costo_m2').textContent = factorProrrateo.toFixed(6);
+        document.getElementById('resultado_liquidacion').classList.remove('hidden');
+        
+        ultimaLiquidacion = {
+            fecha: new Date().toLocaleDateString(),
+            uf: ufDelDia,
+            totalGastosUF,
+            factor: factorProrrateo,
+            detalles: datosParaPDF
+        };
+    }
+
+    function descargarPDF() {
+        if (!ultimaLiquidacion) return;
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFontSize(18);
+        doc.text("Liquidación de Gastos Comunes", 14, 20);
+        doc.setFontSize(11);
+        doc.text(`Fecha: ${ultimaLiquidacion.fecha}`, 14, 30);
+        doc.text(`UF: $${ultimaLiquidacion.uf.toLocaleString('es-CL')}`, 14, 36);
+        
+        doc.line(14, 40, 196, 40);
+        doc.setFont(undefined, 'bold');
+        doc.text(`Total Gastos: ${ultimaLiquidacion.totalGastosUF.toFixed(2)} UF`, 14, 50);
+        doc.text(`Factor: ${ultimaLiquidacion.factor.toFixed(6)} UF/m²`, 14, 56);
+        doc.setFont(undefined, 'normal');
+
+        const tableData = ultimaLiquidacion.detalles.map(d => [
+            d.local, d.metros.toString(), d.porcentaje + '%', 
+            d.gastoComun.toFixed(4), d.arriendo.toFixed(2), d.total.toFixed(2)
+        ]);
+
+        doc.autoTable({
+            startY: 65,
+            head: [['Local', 'Metros', '%', 'Gasto Com.', 'Arriendo+IVA', 'TOTAL']],
+            body: tableData,
+            theme: 'grid',
+            headStyles: { fillColor: [37, 99, 235] }
+        });
+
+        doc.save(`Liquidacion_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+</script>
+
+</body>
+</html>
         .btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.75rem 1.5rem; border: none; }
         .btn-success:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(16,185,129,0.4); }
         .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 0.5rem 1rem; border: none; font-size: 0.875rem; }
