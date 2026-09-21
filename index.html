@@ -30,7 +30,11 @@
             <h1 class="text-3xl font-bold text-gray-800">🏢 Gestión de Cobros - Locales Comerciales</h1>
             <div class="text-right">
                 <label class="block text-sm font-bold text-gray-700">Valor UF Hoy ($):</label>
-                <input type="number" id="valorUf" value="38500" class="text-right font-mono font-bold text-blue-600" onchange="app.renderAll()">
+                <div class="flex items-center gap-2">
+                    <input type="number" id="valorUf" value="38500" class="text-right font-mono font-bold text-blue-600 w-32" onchange="app.renderAll()">
+                    <button onclick="cargarUFDelDia()" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm" title="Obtener UF del día desde el Banco Central">🔄 Actualizar UF</button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1" id="ufFechaActualizacion"></p>
             </div>
         </header>
 
@@ -215,6 +219,47 @@
     </div>
 
     <script>
+        // --- FUNCIÓN PARA OBTENER UF DEL DÍA DESDE MINDICADOR.CL ---
+        async function cargarUFDelDia() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Cargando...';
+            btn.disabled = true;
+
+            try {
+                // Usamos un proxy CORS para evitar problemas de CORS en el navegador
+                const respuesta = await fetch('https://mindicador.cl/api/uf');
+                
+                if (!respuesta.ok) {
+                    throw new Error('Error en la red');
+                }
+
+                const datos = await respuesta.json();
+                const ufValor = datos.serie[0].valor; // Valor de la UF del día
+
+                // Actualizamos el input y guardamos
+                const inputUF = document.getElementById('valorUf');
+                inputUF.value = parseFloat(ufValor).toFixed(2);
+                
+                // Mostramos fecha de actualización
+                const fechaEl = document.getElementById('ufFechaActualizacion');
+                const hoy = new Date();
+                fechaEl.textContent = `Actualizado: ${hoy.toLocaleDateString()} ${hoy.toLocaleTimeString()}`;
+                
+                // Disparamos el evento onchange para actualizar toda la app
+                inputUF.dispatchEvent(new Event('change'));
+                
+                alert(`✅ UF actualizada exitosamente!\nValor: $${parseFloat(ufValor).toLocaleString('es-CL')}`);
+
+            } catch (error) {
+                console.error("Error al obtener la UF:", error);
+                alert("❌ No se pudo obtener la UF del día.\n\nPosibles causas:\n- Problemas de conexión a internet\n- La API está temporalmente no disponible\n\nPor favor ingresa el valor manualmente.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
         // --- LÓGICA DE LA APLICACIÓN ---
         const app = {
             data: {
