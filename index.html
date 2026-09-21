@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Locales Comerciales</title>
+    <!-- Tailwind CSS para diseño rápido -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Librería para generar PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 1.5rem; }
+        input, select { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; margin-top: 0.25rem; }
+        button { cursor: pointer; transition: background 0.2s; }
+        .btn-primary { background-color: #2563eb; color: white; padding: 0.5rem 1rem; border-radius: 4px; font-weight: bold; }
+        .btn-primary:hover { background-color: #1d4ed8; }
+        .btn-danger { background-color: #dc2626; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem; }
+        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #f9fafb; font-weight: 600; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-8 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-800">🏢 Gestión de Cobros - Locales Comerciales</h1>
+            <div class="text-right">
+                <label class="block text-sm font-bold text-gray-700">Valor UF Hoy ($):</label>
+                <input type="number" id="valorUf" value="38500" class="text-right font-mono font-bold text-blue-600" onchange="app.renderAll()">
+            </div>
+        </header>
+
+        <!-- Navegación -->
+        <div class="flex border-b border-gray-300 mb-6">
+            <button onclick="app.switchTab('locales')" id="tab-locales" class="tab-active px-4 py-2">Locales</button>
+            <button onclick="app.switchTab('gastos')" id="tab-gastos" class="px-4 py-2 text-gray-600">Gastos Comunes</button>
+            <button onclick="app.switchTab('consumos')" id="tab-consumos" class="px-4 py-2 text-gray-600">Agua y Luz</button>
+            <button onclick="app.switchTab('facturacion')" id="tab-facturacion" class="px-4 py-2 text-gray-600">Facturación</button>
+        </div>
+
+        <!-- VISTA: LOCALES -->
+        <div id="view-locales" class="view-section">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4">Agregar Nuevo Local</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label>Nombre del Local</label>
+                        <input type="text" id="localNombre" placeholder="Ej: Local 101">
+                    </div>
+                    <div>
+                        <label>Metros Cuadrados (m²)</label>
+                        <input type="number" id="localMetros" placeholder="Ej: 50">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="app.addLocal()" class="btn-primary w-full">Guardar Local</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card overflow-x-auto">
+                <h3 class="font-bold text-lg mb-2">Listado de Locales</h3>
+                <table id="tablaLocales">
+                    <thead><tr><th>Nombre</th><th>Metros²</th><th>Acciones</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VISTA: GASTOS COMUNES -->
+        <div id="view-gastos" class="view-section hidden">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4">Registrar Gasto Común</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label>Descripción</label>
+                        <input type="text" id="gastoDesc" placeholder="Ej: Limpieza, Seguridad">
+                    </div>
+                    <div>
+                        <label>Monto</label>
+                        <input type="number" id="gastoMonto" placeholder="Valor">
+                    </div>
+                    <div>
+                        <label>Moneda</label>
+                        <select id="gastoMoneda">
+                            <option value="CLP">Pesos (CLP)</option>
+                            <option value="UF">Unidades de Fomento (UF)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="app.addGasto()" class="btn-primary w-full">Agregar Gasto</button>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">* Los montos en UF se convertirán a pesos usando la UF del día ingresada arriba.</p>
+            </div>
+
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg">Detalle y Prorrateo</h3>
+                    <button onclick="app.generarPDFGastos()" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">📄 Descargar PDF Prorrateo</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="tablaGastos">
+                        <thead>
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Original</th>
+                                <th>Valor en Pesos (Total)</th>
+                                <th>% Prorrateo</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="mt-4 p-4 bg-blue-50 rounded border border-blue-200">
+                    <h4 class="font-bold text-blue-800">Resumen Total a Cobrar (Prorrateado)</h4>
+                    <p id="totalGastosComunes" class="text-2xl font-bold text-gray-800">$0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA: CONSUMOS (AGUA/LUZ) -->
+        <div id="view-consumos" class="view-section hidden">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4">Registrar Consumo</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Agua -->
+                    <div class="border p-4 rounded bg-blue-50">
+                        <h3 class="font-bold text-blue-800 mb-2">💧 Agua</h3>
+                        <div class="space-y-2">
+                            <select id="aguaLocal"><option>Seleccione Local</option></select>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" id="aguaInicio" placeholder="Lectura Anterior (m³)">
+                                <input type="number" id="aguaFinal" placeholder="Lectura Actual (m³)">
+                            </div>
+                            <input type="number" id="aguaPrecioTotal" placeholder="Costo Total Factura Agua ($)">
+                            <button onclick="app.calcularAgua()" class="btn-primary w-full mt-2">Calcular Cobro Agua</button>
+                        </div>
+                    </div>
+
+                    <!-- Luz -->
+                    <div class="border p-4 rounded bg-yellow-50">
+                        <h3 class="font-bold text-yellow-800 mb-2">💡 Luz</h3>
+                        <div class="space-y-2">
+                            <select id="luzLocal"><option>Seleccione Local</option></select>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" id="luzInicio" placeholder="Lectura Anterior (kWh)">
+                                <input type="number" id="luzFinal" placeholder="Lectura Actual (kWh)">
+                            </div>
+                            <input type="number" id="luzPrecioKwh" placeholder="Precio por kWh ($)">
+                            <button onclick="app.calcularLuz()" class="btn-primary w-full mt-2">Calcular Cobro Luz</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="font-bold text-lg mb-2">Historial de Consumos Registrados</h3>
+                <table id="tablaConsumos">
+                    <thead><tr><th>Tipo</th><th>Local</th><th>Consumo</th><th>Total a Pagar</th><th>Fecha</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VISTA: FACTURACIÓN -->
+        <div id="view-facturacion" class="view-section hidden">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4">Generar Estado de Cuenta</h2>
+                <div class="flex gap-4 mb-4">
+                    <select id="facturaLocal" class="flex-1"><option>Seleccione un Local...</option></select>
+                    <button onclick="app.generarFactura()" class="btn-primary">Ver Detalle y Descargar PDF</button>
+                </div>
+                
+                <div id="vistaPreviaFactura" class="hidden border p-6 bg-white shadow-inner">
+                    <div class="flex justify-between mb-4 border-b pb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold" id="facturaTitulo">Estado de Cuenta</h3>
+                            <p id="facturaLocalNombre" class="text-gray-600"></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">Fecha Emisión:</p>
+                            <p id="facturaFecha" class="font-bold"></p>
+                        </div>
+                    </div>
+
+                    <table class="w-full mb-6">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-2 text-left">Concepto</th>
+                                <th class="p-2 text-right">Base (UF)</th>
+                                <th class="p-2 text-right">IVA (19%)</th>
+                                <th class="p-2 text-right">Total ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoFactura">
+                            <!-- Items dinámicos -->
+                        </tbody>
+                        <tfoot class="font-bold text-lg">
+                            <tr class="border-t">
+                                <td class="p-2">TOTAL A PAGAR</td>
+                                <td></td>
+                                <td></td>
+                                <td class="p-2 text-right text-blue-600" id="facturaTotal"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    
+                    <button onclick="app.descargarPDFFactura()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 w-full">📥 Descargar PDF Formal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA DE LA APLICACIÓN ---
+        const app = {
+            data: {
+                locales: [],
+                gastos: [],
+                consumos: [],
+                ufValue: 38500
+            },
+
+            init() {
+                // Cargar datos de LocalStorage si existen
+                const saved = localStorage.getItem('rentalAppDB');
+                if (saved) {
+                    this.data = JSON.parse(saved);
+                    document.getElementById('valorUf').value = this.data.ufValue;
+                }
+                this.renderAll();
+            },
+
+            save() {
+                this.data.ufValue = parseFloat(document.getElementById('valorUf').value) || 0;
+                localStorage.setItem('rentalAppDB', JSON.stringify(this.data));
+                this.renderAll();
+            },
+
+            switchTab(tabName) {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`view-${tabName}`).classList.remove('hidden');
+                
+                document.querySelectorAll('button[id^="tab-"]').forEach(el => {
+                    el.classList.remove('tab-active', 'text-blue-600', 'font-bold');
+                    el.classList.add('text-gray-600');
+                });
+                const activeBtn = document.getElementById(`tab-${tabName}`);
+                activeBtn.classList.add('tab-active');
+                activeBtn.classList.remove('text-gray-600');
+
+                if(tabName === 'consumos' || tabName === 'facturacion') this.updateSelects();
+            },
+
+            // --- GESTIÓN DE LOCALES ---
+            addLocal() {
+                const nombre = document.getElementById('localNombre').value;
+                const metros = parseFloat(document.getElementById('localMetros').value);
+                
+                if (!nombre || !metros) return alert('Complete todos los campos');
+
+                this.data.locales.push({ id: Date.now(), nombre, metros });
+                document.getElementById('localNombre').value = '';
+                document.getElementById('localMetros').value = '';
+                this.save();
+            },
+
+            deleteLocal(id) {
+                if(confirm('¿Eliminar local?')) {
+                    this.data.locales = this.data.locales.filter(l => l.id !== id);
+                    this.save();
+                }
+            },
+
+            // --- GESTIÓN DE GASTOS ---
+            addGasto() {
+                const desc = document.getElementById('gastoDesc').value;
+                const monto = parseFloat(document.getElementById('gastoMonto').value);
+                const moneda = document.getElementById('gastoMoneda').value;
+                const uf = this.data.ufValue;
+
+                if (!desc || !monto) return alert('Complete los datos del gasto');
+
+                let valorPesos = monto;
+                if (moneda === 'UF') {
+                    valorPesos = monto * uf;
+                }
+
+                this.data.gastos.push({
+                    id: Date.now(),
+                    desc,
+                    original: `${monto} ${moneda}`,
+                    valorPesos,
+                    fecha: new Date().toLocaleDateString()
+                });
+
+                document.getElementById('gastoDesc').value = '';
+                document.getElementById('gastoMonto').value = '';
+                this.save();
+            },
+
+            deleteGasto(id) {
+                this.data.gastos = this.data.gastos.filter(g => g.id !== id);
+                this.save();
+            },
+
+            // --- CÁLCULOS DE CONSUMO ---
+            calcularAgua() {
+                const localId = parseInt(document.getElementById('aguaLocal').value);
+                const inicio = parseFloat(document.getElementById('aguaInicio').value);
+                const final = parseFloat(document.getElementById('aguaFinal').value);
+                const costoTotal = parseFloat(document.getElementById('aguaPrecioTotal').value);
+
+                if (!localId || !inicio || !final || !costoTotal) return alert('Faltan datos de agua');
+                if (final <= inicio) return alert('La lectura final debe ser mayor a la inicial');
+
+                const consumo = final - inicio;
+                // Nota: En una app real, sumaríamos el consumo total de todos los locales para sacar el % exacto.
+                // Aquí asumimos que el usuario ingresa el costo total de la factura general y calculamos proporcional si tuviera base,
+                // pero como pide "cobrar por porcentaje con respecto al total consumido", necesitamos el total global.
+                // Simplificación para demo: El usuario ingresa el costo total de SU consumo o calculamos directo.
+                // Interpretación: "Se cobra por porcentaje con respecto al total consumido". 
+                // Para hacer esto bien necesitaríamos registrar TODOS los consumos primero.
+                // Haremos esto: Guardamos el consumo en m3. Al facturar, sumamos todos los m3 y distribuimos el costo total.
+                // Pero para simplificar la UX aquí, calcularemos el valor unitario promedio si el usuario dice "Este es el costo total del edificio".
+                // MEJOR ENFOQUE: Guardamos el registro de consumo (m3). El cálculo financiero se hace en la facturación o asumiendo un rate.
+                // Vamos a guardar el registro crudo.
+                
+                const local = this.data.locales.find(l => l.id === localId);
+                
+                this.data.consumos.push({
+                    id: Date.now(),
+                    tipo: 'Agua',
+                    localId,
+                    localNombre: local.nombre,
+                    consumo: consumo, // m3
+                    detalle: `${inicio} -> ${final}`,
+                    costoTotalFactura: costoTotal, // Referencia
+                    fecha: new Date().toLocaleDateString()
+                });
+
+                alert('Consumo de agua registrado. El cálculo final en pesos se hará en la facturación basado en el total del edificio.');
+                this.save();
+            },
+
+            calcularLuz() {
+                const localId = parseInt(document.getElementById('luzLocal').value);
+                const inicio = parseFloat(document.getElementById('luzInicio').value);
+                const final = parseFloat(document.getElementById('luzFinal').value);
+                const precioKwh = parseFloat(document.getElementById('luzPrecioKwh').value);
+
+                if (!localId || !inicio || !final || !precioKwh) return alert('Faltan datos de luz');
+
+                const consumo = final - inicio;
+                const totalPagar = consumo * precioKwh;
+                const local = this.data.locales.find(l => l.id === localId);
+
+                this.data.consumos.push({
+                    id: Date.now(),
+                    tipo: 'Luz',
+                    localId,
+                    localNombre: local.nombre,
+                    consumo: consumo, // kWh
+                    detalle: `${inicio} -> ${final}`,
+                    totalPagar: totalPagar,
+                    fecha: new Date().toLocaleDateString()
+                });
+
+                alert(`Consumo de luz registrado. Total a cobrar: $${totalPagar.toLocaleString()}`);
+                this.save();
+            },
+
+            // --- RENDERIZADO ---
+            renderAll() {
+                this.save(); // Guarda UF actual
+                
+                // Render Locales
+                const tbodyLocales = document.querySelector('#tablaLocales tbody');
+                tbodyLocales.innerHTML = this.data.locales.map(l => `
+                    <tr>
+                        <td>${l.nombre}</td>
+                        <td>${l.metros} m²</td>
+                        <td><button onclick="app.deleteLocal(${l.id})" class="btn-danger">Eliminar</button></td>
+                    </tr>
+                `).join('');
+
+                // Render Gastos y Prorrateo
+                const totalMetros = this.data.locales.reduce((sum, l) => sum + l.metros, 0);
+                const totalGastosPesos = this.data.gastos.reduce((sum, g) => sum + g.valorPesos, 0);
+                
+                const tbodyGastos = document.querySelector('#tablaGastos tbody');
+                if (totalMetros === 0) {
+                    tbodyGastos.innerHTML = '<tr><td colspan="4" class="text-center text-red-500">Debe registrar locales con metros cuadrados para calcular prorrateo.</td></tr>';
+                } else {
+                    tbodyGastos.innerHTML = this.data.gastos.map(g => {
+                        const porcentaje = totalGastosPesos > 0 ? (g.valorPesos / totalGastosPesos) * 100 : 0;
+                        return `
+                        <tr>
+                            <td>${g.desc}</td>
+                            <td>${g.original}</td>
+                            <td>$${g.valorPesos.toLocaleString()}</td>
+                            <td>${porcentaje.toFixed(2)}%</td>
+                            <td><button onclick="app.deleteGasto(${g.id})" class="text-red-500 text-sm">x</button></td>
+                        </tr>
+                    `}).join('');
+                }
+                document.getElementById('totalGastosComunes').innerText = `$${totalGastosPesos.toLocaleString()}`;
+
+                // Render Consumos
+                const tbodyConsumos = document.querySelector('#tablaConsumos tbody');
+                tbodyConsumos.innerHTML = this.data.consumos.map(c => `
+                    <tr>
+                        <td><span class="px-2 py-1 rounded text-xs ${c.tipo === 'Agua' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}">${c.tipo}</span></td>
+                        <td>${c.localNombre}</td>
+                        <td>${c.consumo} ${c.tipo === 'Agua' ? 'm³' : 'kWh'}</td>
+                        <td>${c.totalPagar ? '$'+c.totalPagar.toLocaleString() : 'Pend. Cálculo Global'}</td>
+                        <td>${c.fecha}</td>
+                    </tr>
+                `).join('');
+
+                this.updateSelects();
+            },
+
+            updateSelects() {
+                const options = this.data.locales.map(l => `<option value="${l.id}">${l.nombre}</option>`).join('');
+                const selects = ['aguaLocal', 'luzLocal', 'facturaLocal'];
+                selects.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.innerHTML = '<option value="">Seleccione Local...</option>' + options;
+                });
+            },
+
+            // --- FACTURACIÓN Y PDF ---
+            generarFactura() {
+                const localId = parseInt(document.getElementById('facturaLocal').value);
+                if (!localId) return alert('Seleccione un local');
+
+                const local = this.data.locales.find(l => l.id === localId);
+                const totalMetros = this.data.locales.reduce((sum, l) => sum + l.metros, 0);
+                const totalGastos = this.data.gastos.reduce((sum, g) => sum + g.valorPesos, 0);
+                
+                // Calcular parte proporcional de gastos comunes
+                const cuotaGastos = totalMetros > 0 ? (local.metros / totalMetros) * totalGastos : 0;
+
+                // Calcular Agua (Lógica de prorrateo global simulada)
+                // Sumamos todos los consumos de agua de este periodo
+                const consumosAgua = this.data.consumos.filter(c => c.tipo === 'Agua');
+                const totalConsumoAguaEdificio = consumosAgua.reduce((sum, c) => sum + c.consumo, 0);
+                const miConsumoAguaObj = consumosAgua.find(c => c.localId === localId);
+                let costoAguaLocal = 0;
+                
+                if (miConsumoAguaObj && totalConsumoAguaEdificio > 0) {
+                    // Tomamos el costo total de la factura más alto registrado como referencia del edificio
+                    // En una app real, esto sería un campo único "Factura General Agua"
+                    const costoTotalFacturaRef = Math.max(...consumosAgua.map(c => c.costoTotalFactura || 0));
+                    const porcentajeConsumo = miConsumoAguaObj.consumo / totalConsumoAguaEdificio;
+                    costoAguaLocal = costoTotalFacturaRef * porcentajeConsumo;
+                }
+
+                // Calcular Luz (Ya tiene precio fijo)
+                const consumosLuz = this.data.consumos.filter(c => c.tipo === 'Luz' && c.localId === localId);
+                const costoLuzLocal = consumosLuz.reduce((sum, c) => sum + (c.totalPagar || 0), 0);
+
+                // Arriendo (Simulado: Pediremos al usuario o usaremos un default, aquí lo dejaremos manual en la vista o 0)
+                // Para este ejemplo, asumiremos que el arriendo se ingresa al momento o es 0 si no hay dato.
+                // Agregaremos un input dinámico en la vista previa para el arriendo.
+                
+                const vista = document.getElementById('vistaPreviaFactura');
+                vista.classList.remove('hidden');
+                document.getElementById('facturaLocalNombre').innerText = local.nombre;
+                document.getElementById('facturaFecha').innerText = new Date().toLocaleDateString();
+
+                // Guardamos valores temporales para el PDF
+                this.currentFactura = {
+                    local: local.nombre,
+                    gastos: cuotaGastos,
+                    agua: costoAguaLocal,
+                    luz: costoLuzLocal,
+                    arriendoUF: 0 // Se llenará
+                };
+
+                this.renderFacturaBody();
+            },
+
+            renderFacturaBody() {
+                const uf = this.data.ufValue;
+                const ivaRate = 0.19;
+                
+                // Obtener arriendo ingresado en el DOM si existe
+                const arriendoInput = document.getElementById('inputArriendoUF');
+                const arriendoUF = arriendoInput ? parseFloat(arriendoInput.value) || 0 : 0;
+                this.currentFactura.arriendoUF = arriendoUF;
+
+                const items = [];
+
+                // 1. Arriendo
+                if (arriendoUF > 0) {
+                    const valorNeto = arriendoUF * uf;
+                    const iva = valorNeto * ivaRate;
+                    items.push({
+                        concepto: `Arriendo (${arriendoUF} UF)`,
+                        base: `${arriendoUF} UF`,
+                        iva: iva,
+                        total: valorNeto + iva
+                    });
+                }
+
+                // 2. Gastos Comunes (Se asume neto o exento según contexto, usualmente no llevan IVA si es reembolso, pero si es servicio sí. Asumiremos Neto + IVA para simplificar o solo Total)
+                // Regla común: Gastos comunes reembolsables no generan IVA sobre el reembolso, pero la administración sí.
+                // Para este ejemplo: Trataremos el prorrateo como valor neto y aplicaremos IVA si corresponde.
+                // Simplificación: Valor Prorrateado es el total a pagar.
+                items.push({
+                    concepto: 'Prorrateo Gastos Comunes',
+                    base: '-',
+                    iva: 0, // Asumido incluido o exento para el ejemplo
+                    total: this.currentFactura.gastos
+                });
+
+                // 3. Agua
+                if (this.currentFactura.agua > 0) {
+                    items.push({
+                        concepto: 'Consumo Agua (Prorrateo)',
+                        base: '-',
+                        iva: 0,
+                        total: this.currentFactura.agua
+                    });
+                }
+
+                // 4. Luz
+                if (this.currentFactura.luz > 0) {
+                    items.push({
+                        concepto: 'Consumo Luz',
+                        base: '-',
+                        iva: 0,
+                        total: this.currentFactura.luz
+                    });
+                }
+
+                const tbody = document.getElementById('cuerpoFactura');
+                let granTotal = 0;
+
+                tbody.innerHTML = items.map(item => {
+                    granTotal += item.total;
+                    return `
+                    <tr>
+                        <td class="p-2 border-b">${item.concepto}</td>
+                        <td class="p-2 border-b text-right text-gray-500">${item.base}</td>
+                        <td class="p-2 border-b text-right">$${item.iva.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                        <td class="p-2 border-b text-right font-bold">$${item.total.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    </tr>
+                `}).join('');
+
+                // Fila especial para ingresar Arriendo si no existe
+                if (items.length === 0 || !items.find(i => i.concepto.includes('Arriendo'))) {
+                     const row = document.createElement('tr');
+                     row.innerHTML = `
+                        <td class="p-2 border-b" colspan="4">
+                            <label class="text-sm font-bold">Ingrese Arriendo del mes (UF): </label>
+                            <input type="number" id="inputArriendoUF" value="${this.currentFactura.arriendoUF}" onchange="app.renderFacturaBody()" class="w-32 inline-block ml-2 border p-1 rounded">
+                        </td>
+                     `;
+                     tbody.prepend(row);
+                }
+
+                document.getElementById('facturaTotal').innerText = `$${granTotal.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+            },
+
+            descargarPDFFactura() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const uf = this.data.ufValue;
+
+                doc.setFontSize(18);
+                doc.text("Estado de Cuenta - Arriendo", 14, 20);
+                
+                doc.setFontSize(12);
+                doc.text(`Local: ${this.currentFactura.local}`, 14, 30);
+                doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 38);
+                doc.text(`Valor UF: $${uf.toLocaleString()}`, 14, 46);
+
+                const tableData = [];
+                let total = 0;
+
+                // Recalcular para el PDF limpio
+                if (this.currentFactura.arriendoUF > 0) {
+                    const neto = this.currentFactura.arriendoUF * uf;
+                    const iva = neto * 0.19;
+                    tableData.push(["Arriendo", `${this.currentFactura.arriendoUF} UF`, `$${iva.toLocaleString()}`, `$${(neto+iva).toLocaleString()}`]);
+                    total += (neto+iva);
+                }
+                if (this.currentFactura.gastos > 0) {
+                    tableData.push(["Gastos Comunes", "-", "$0", `$${this.currentFactura.gastos.toLocaleString()}`]);
+                    total += this.currentFactura.gastos;
+                }
+                if (this.currentFactura.agua > 0) {
+                    tableData.push(["Agua", "-", "$0", `$${this.currentFactura.agua.toLocaleString()}`]);
+                    total += this.currentFactura.agua;
+                }
+                if (this.currentFactura.luz > 0) {
+                    tableData.push(["Luz", "-", "$0", `$${this.currentFactura.luz.toLocaleString()}`]);
+                    total += this.currentFactura.luz;
+                }
+
+                doc.autoTable({
+                    startY: 55,
+                    head: [['Concepto', 'Base', 'IVA', 'Total']],
+                    body: tableData,
+                    theme: 'striped',
+                    foot: [['', '', 'TOTAL A PAGAR', `$${total.toLocaleString()}`]]
+                });
+
+                doc.save(`Factura_${this.currentFactura.local}.pdf`);
+            },
+
+            generarPDFGastos() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const uf = this.data.ufValue;
+                const totalMetros = this.data.locales.reduce((sum, l) => sum + l.metros, 0);
+                const totalGastos = this.data.gastos.reduce((sum, g) => sum + g.valorPesos, 0);
+
+                doc.setFontSize(16);
+                doc.text("Detalle de Prorrateo - Gastos Comunes", 14, 20);
+                doc.setFontSize(10);
+                doc.text(`Fecha: ${new Date().toLocaleDateString()} | UF: $${uf.toLocaleString()}`, 14, 28);
+                doc.text(`Total Metros Edificio: ${totalMetros} m²`, 14, 34);
+                doc.text(`Total Gastos a Prorratear: $${totalGastos.toLocaleString()}`, 14, 40);
+
+                const bodyData = this.data.locales.map(local => {
+                    const factor = local.metros / totalMetros;
+                    const montoPagar = totalGastos * factor;
+                    return [
+                        local.nombre,
+                        local.metros,
+                        `${(factor * 100).toFixed(2)}%`,
+                        `$${montoPagar.toLocaleString(undefined, {maximumFractionDigits: 0})}`
+                    ];
+                });
+
+                doc.autoTable({
+                    startY: 50,
+                    head: [['Local', 'Metros²', '% Participación', 'Monto a Pagar']],
+                    body: bodyData,
+                    theme: 'grid',
+                    didParseCell: function(data) {
+                        if (data.section === 'body' && data.column.index === 3) {
+                            data.cell.styles.fontStyle = 'bold';
+                            data.cell.styles.textColor = [37, 99, 235];
+                        }
+                    }
+                });
+
+                doc.save("Prorrateo_Gastos_Comunes.pdf");
+            }
+        };
+
+        // Iniciar app
+        app.init();
+    </script>
+</body>
+</html>
