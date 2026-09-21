@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <!-- Iconos -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1f2937; }
@@ -38,15 +38,13 @@
         .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
         .badge-uf { background-color: #dbeafe; color: #1e40af; }
         .badge-clp { background-color: #dcfce7; color: #166534; }
-        .badge-water { background-color: #e0f2fe; color: #0369a1; }
-        .badge-light { background-color: #fef3c7; color: #92400e; }
         
         .empty-state { text-align: center; padding: 3rem; color: #9ca3af; font-style: italic; }
 
         /* Estados de Pago */
-        .status-pendiente { background-color: #fee2e2; color: #991b1b; } /* Rojo claro */
-        .status-abonado { background-color: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; } /* Amarillo */
-        .status-pagado { background-color: #dcfce7; color: #166534; border-left: 4px solid #16a34a; } /* Verde */
+        .status-pendiente { background-color: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .status-abonado { background-color: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
+        .status-pagado { background-color: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -56,7 +54,7 @@
     <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div>
             <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-building mr-3 text-blue-600"></i>Gestión Boulevard</h1>
-            <p class="text-gray-500 mt-1">Administración de Locales, Gastos y Cobranza</p>
+            <p class="text-gray-500 mt-1">Administración de Locales, Gastos y Servicios</p>
         </div>
         <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 text-center md:text-right">
             <div class="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">UF del Día</div>
@@ -72,9 +70,9 @@
     <!-- Navegación por Pestañas -->
     <div class="tabs-container shadow-sm">
         <button onclick="switchTab('locales')" class="tab-btn active" id="tab-locales"><i class="fas fa-store mr-2"></i>Locales</button>
-        <button onclick="switchTab('configuracion')" class="tab-btn" id="tab-configuracion"><i class="fas fa-cogs mr-2"></i>Configuración</button>
-        <button onclick="switchTab('liquidar')" class="tab-btn" id="tab-liquidar"><i class="fas fa-calculator mr-2"></i>Liquidar Mes</button>
-        <button onclick="switchTab('cobranza')" class="tab-btn" id="tab-cobranza"><i class="fas fa-wallet mr-2"></i>Cobranza y Pagos</button>
+        <button onclick="switchTab('gastos-config')" class="tab-btn" id="tab-gastos-config"><i class="fas fa-cogs mr-2"></i>Gastos Fijos</button>
+        <button onclick="switchTab('servicios')" class="tab-btn" id="tab-servicios"><i class="fas fa-tint mr-2"></i>Agua y Luz</button>
+        <button onclick="switchTab('cobranza')" class="tab-btn" id="tab-cobranza"><i class="fas fa-chart-line mr-2"></i>Cobranza General</button>
     </div>
 
     <!-- SECCIÓN 1: LOCALES -->
@@ -99,7 +97,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">% Consumo Agua</label>
                         <input type="number" id="local_pct_agua" placeholder="Ej: 20 (para 20%)" class="input-field" step="0.1" max="100">
-                        <p class="text-xs text-gray-500 mt-1">Porcentaje fijo sobre el total de la cuenta de agua.</p>
+                        <p class="text-xs text-gray-500 mt-1">Porcentaje que paga este local sobre la factura total de agua.</p>
                     </div>
                     <button onclick="agregarLocal()" class="btn-primary w-full mt-2 shadow-md">
                         <i class="fas fa-plus-circle mr-2"></i>Guardar Local
@@ -123,17 +121,14 @@
                         </thead>
                         <tbody id="body_locales"></tbody>
                     </table>
-                    <div id="msg_sin_locales" class="empty-state">
-                        <i class="fas fa-box-open text-4xl mb-2"></i>
-                        <p>No hay locales registrados aún.</p>
-                    </div>
+                    <div id="msg_sin_locales" class="empty-state"><i class="fas fa-box-open text-4xl mb-2"></i><p>No hay locales registrados.</p></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SECCIÓN 2: CONFIGURACIÓN (Gastos Fijos) -->
-    <div id="sec-configuracion" class="section-content hidden-section animate-fade-in">
+    <!-- SECCIÓN 2: CONFIG GASTOS FIJOS -->
+    <div id="sec-gastos-config" class="section-content hidden-section">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="card p-6 h-fit">
                 <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2">Definir Gasto Fijo</h3>
@@ -141,7 +136,7 @@
                     <input type="text" id="gasto_nombre" placeholder="Concepto (Conserje, etc)" class="input-field">
                     <select id="gasto_tipo" class="input-field bg-white">
                         <option value="UF">Valor en UF</option>
-                        <option value="CLP">Valor en Pesos (CLP)</option>
+                        <option value="CLP">Valor en Pesos</option>
                     </select>
                     <input type="number" id="gasto_valor" placeholder="Monto" class="input-field">
                     <button onclick="agregarGastoFijo()" class="btn-primary w-full shadow-md">
@@ -150,142 +145,133 @@
                 </div>
             </div>
             <div class="lg:col-span-2 card p-6">
-                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2">Gastos Comunes Fijos</h3>
+                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2">Gastos Configurados</h3>
                 <table id="tabla_gastos_fijos">
-                    <thead><tr><th>Concepto</th><th>Tipo</th><th>Valor</th><th>Acción</th></tr></thead>
+                    <thead><tr><th>Concepto</th><th class="text-center">Tipo</th><th class="text-right">Valor</th><th class="text-right">Acción</th></tr></thead>
                     <tbody id="body_gastos_fijos"></tbody>
                 </table>
-                <div id="msg_sin_gastos" class="empty-state">No hay gastos configurados.</div>
+                <div id="msg_sin_gastos" class="empty-state"><i class="fas fa-list-ul text-4xl mb-2"></i><p>Sin gastos fijos.</p></div>
             </div>
         </div>
     </div>
 
-    <!-- SECCIÓN 3: LIQUIDAR MES -->
-    <div id="sec-liquidar" class="section-content hidden-section animate-fade-in">
-        <div class="card p-8">
-            <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Generar Liquidación Mensual</h2>
-                <p class="text-gray-500">Ingresa los consumos variables (Agua Total, Luz) y calcula los cobros.</p>
-            </div>
-
-            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Mes a Liquidar</label>
-                    <input type="month" id="mes_liquidacion" class="input-field font-bold">
+    <!-- SECCIÓN 3: SERVICIOS (AGUA Y LUZ) -->
+    <div id="sec-servicios" class="section-content hidden-section">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Tarjeta Agua -->
+            <div class="card p-6 border-t-4 border-blue-500">
+                <div class="flex items-center mb-4">
+                    <div class="bg-blue-100 p-3 rounded-full mr-3 text-blue-600"><i class="fas fa-tint text-xl"></i></div>
+                    <h3 class="font-bold text-lg text-gray-700">Facturación de Agua</h3>
                 </div>
-                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 pt-4 border-t border-gray-200">
-                    <div>
-                        <label class="block text-sm font-bold text-blue-700 mb-2"><i class="fas fa-tint mr-1"></i> Costo TOTAL Factura de Agua ($)</label>
-                        <input type="number" id="costo_total_agua" placeholder="Monto total a prorratear %" class="input-field border-blue-200 bg-blue-50">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-yellow-700 mb-2"><i class="fas fa-bolt mr-1"></i> Costo TOTAL Factura de Luz ($) O Precio kWh</label>
-                        <input type="number" id="costo_total_luz" placeholder="Monto total o precio unitario" class="input-field border-yellow-200 bg-yellow-50">
-                        <div class="flex items-center mt-2">
-                            <input type="checkbox" id="luz_por_kwh" class="mr-2">
-                            <label for="luz_por_kwh" class="text-xs text-gray-600">El valor ingresado es Precio por kWh (requiere ingreso de lectura por local)</label>
-                        </div>
-                    </div>
+                <p class="text-sm text-gray-500 mb-4">Ingrese el monto TOTAL de la factura de agua. El sistema distribuirá el costo según el % definido en cada local.</p>
+                <div class="flex gap-2">
+                    <input type="number" id="agua_total_factura" placeholder="Monto Total Factura ($)" class="input-field font-bold text-blue-700">
+                    <button onclick="guardarServicio('agua')" class="btn-primary whitespace-nowrap">Aplicar Agua</button>
                 </div>
             </div>
 
-            <div class="text-center">
-                <button onclick="generarLiquidacion()" class="btn-primary text-lg px-8 shadow-lg">
-                    <i class="fas fa-calculator mr-2"></i>Calcular y Generar Cobros
-                </button>
-            </div>
-            
-            <!-- Resultados -->
-            <div id="resultado_liquidacion" class="hidden mt-8 animate-fade-in-up">
-                <div class="flex justify-between items-center mb-4 bg-blue-600 text-white p-4 rounded-lg">
-                    <h3 class="text-xl font-bold">Resumen de Liquidación</h3>
-                    <button onclick="descargarPDF()" class="bg-white text-blue-600 px-4 py-2 rounded font-bold shadow hover:bg-gray-100">
-                        <i class="fas fa-file-pdf mr-2"></i>Descargar PDF
-                    </button>
+            <!-- Tarjeta Luz -->
+            <div class="card p-6 border-t-4 border-yellow-500">
+                <div class="flex items-center mb-4">
+                    <div class="bg-yellow-100 p-3 rounded-full mr-3 text-yellow-600"><i class="fas fa-bolt text-xl"></i></div>
+                    <h3 class="font-bold text-lg text-gray-700">Facturación de Luz</h3>
                 </div>
-                
-                <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
-                    <table class="w-full bg-white" id="tabla_resultados">
-                        <thead class="bg-gray-800 text-white">
-                            <tr>
-                                <th class="p-3 text-left">Local</th>
-                                <th class="p-3 text-right">Arriendo+IVA</th>
-                                <th class="p-3 text-right">Gastos Com.</th>
-                                <th class="p-3 text-right">Agua (%)</th>
-                                <th class="p-3 text-right">Luz</th>
-                                <th class="p-3 text-right bg-gray-700">TOTAL</th>
-                            </tr>
-                        </thead>
-                        <tbody id="body_resultados" class="divide-y divide-gray-200"></tbody>
-                    </table>
+                <p class="text-sm text-gray-500 mb-4">Registre consumo por local (kWh) y el valor unitario.</p>
+                <div class="space-y-3">
+                    <div class="flex gap-2">
+                        <select id="luz_local_select" class="input-field bg-white"></select>
+                        <input type="number" id="luz_kwh" placeholder="kWh Consumidos" class="input-field w-32">
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="number" id="luz_valor_kwh" placeholder="Valor por kWh ($)" class="input-field">
+                        <button onclick="guardarConsumoLuz()" class="btn-primary whitespace-nowrap">Agregar Consumo</button>
+                    </div>
                 </div>
-                <p class="text-xs text-gray-500 mt-4 text-center">* Los cobros generados se guardarán en la sección "Cobranza y Pagos".</p>
             </div>
         </div>
-    </div>
 
-    <!-- SECCIÓN 4: COBRANZA Y PAGOS -->
-    <div id="sec-cobranza" class="section-content hidden-section animate-fade-in">
+        <!-- Resumen Servicios Actuales -->
         <div class="card p-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Estado de Cuenta y Pagos</h2>
-            
-            <div class="mb-4 flex gap-2">
-                <select id="filtro_mes_cobranza" class="input-field w-48 bg-white" onchange="renderCobranza()">
-                    <option value="">Todos los Meses</option>
-                    <!-- Se llena dinámicamente -->
-                </select>
-                <button onclick="renderCobranza()" class="btn-primary"><i class="fas fa-filter mr-2"></i>Filtrar</button>
-            </div>
-
+            <h3 class="font-bold text-lg mb-4 text-gray-700">Resumen de Servicios Aplicados</h3>
             <div class="overflow-x-auto">
-                <table class="w-full bg-white shadow rounded-lg" id="tabla_cobranza">
-                    <thead class="bg-gray-100 text-gray-700">
+                <table id="tabla_servicios">
+                    <thead>
                         <tr>
-                            <th class="p-3 text-left">Local / Mes</th>
-                            <th class="p-3 text-right">Total Deuda</th>
+                            <th>Local</th>
+                            <th class="text-center">Tipo</th>
+                            <th class="text-center">Detalle</th>
+                            <th class="text-right">Monto ($)</th>
+                            <th class="text-right">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body_servicios"></tbody>
+                </table>
+                <div id="msg_sin_servicios" class="empty-state">No hay servicios aplicados este mes.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 4: COBRANZA GENERAL -->
+    <div id="sec-cobranza" class="section-content hidden-section">
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Estado de Cuenta Global</h2>
+                <button onclick="generarLiquidacionGlobal()" class="btn-primary"><i class="fas fa-calculator mr-2"></i>Recalcular Todo</button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full bg-white shadow-lg rounded-lg overflow-hidden">
+                    <thead class="bg-gray-800 text-white">
+                        <tr>
+                            <th class="p-3 text-left">Local</th>
+                            <th class="p-3 text-right">Arriendo+IVA</th>
+                            <th class="p-3 text-right">Gastos Com.</th>
+                            <th class="p-3 text-right">Agua</th>
+                            <th class="p-3 text-right">Luz</th>
+                            <th class="p-3 text-right bg-gray-700">TOTAL</th>
                             <th class="p-3 text-center">Estado</th>
-                            <th class="p-3 text-right">Saldo Pendiente</th>
                             <th class="p-3 text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="body_cobranza"></tbody>
+                    <tbody id="body_cobranza" class="divide-y divide-gray-200"></tbody>
                 </table>
-                <div id="msg_sin_cobranza" class="empty-state">No hay liquidaciones generadas aún.</div>
+                <div id="msg_sin_cobranza" class="empty-state">Genera la liquidación para ver el estado de cuenta.</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL DE PAGO -->
-<div id="modal_pago" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+<!-- Modal de Pago -->
+<div id="modal_pago" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl transform transition-all">
         <h3 class="text-xl font-bold mb-4 text-gray-800">Gestionar Pago</h3>
-        <p id="modal_info_local" class="text-sm text-gray-500 mb-4"></p>
+        <p class="text-gray-600 mb-4">Local: <span id="modal_local_nombre" class="font-bold"></span></p>
+        <p class="text-gray-600 mb-4">Total Deuda: <span id="modal_total_deuda" class="font-bold text-red-600"></span></p>
         
         <div class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Estado del Pago</label>
-                <select id="pago_estado" class="input-field bg-white" onchange="toggleCamposPago()">
-                    <option value="pendiente">Pendiente (Rojo)</option>
-                    <option value="abonado">Abonado Parcial (Amarillo)</option>
-                    <option value="pagado">Pagado Total (Verde)</option>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <select id="pago_estado" class="input-field bg-white" onchange="toggleCampoAbono()">
+                    <option value="pendiente">Pendiente</option>
+                    <option value="abonado">Abonado (Parcial)</option>
+                    <option value="pagado">Pagado (Total)</option>
                 </select>
             </div>
-
-            <div id="campo_monto_abono" class="hidden">
+            
+            <div id="div_monto_abono" class="hidden">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Monto Abonado ($)</label>
                 <input type="number" id="pago_monto" class="input-field" placeholder="0">
-                <p class="text-xs text-gray-500 mt-1">El sistema calculará el saldo restante automáticamente.</p>
             </div>
 
-            <div id="campo_fecha_pago" class="hidden">
+            <div id="div_fecha_pago" class="hidden">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Pago</label>
                 <input type="date" id="pago_fecha" class="input-field">
             </div>
 
-            <div class="flex justify-end gap-3 mt-6">
-                <button onclick="cerrarModalPago()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
-                <button onclick="guardarPago()" class="btn-primary">Guardar Cambio</button>
+            <div class="flex gap-2 mt-6">
+                <button onclick="cerrarModal()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded hover:bg-gray-300">Cancelar</button>
+                <button onclick="confirmarPago()" class="flex-1 btn-primary">Guardar</button>
             </div>
         </div>
     </div>
@@ -295,64 +281,47 @@
     // --- ESTADO GLOBAL ---
     let locales = JSON.parse(localStorage.getItem('gb_locales')) || [];
     let gastosFijos = JSON.parse(localStorage.getItem('gb_gastos_fijos')) || [];
-    let liquidaciones = JSON.parse(localStorage.getItem('gb_liquidaciones')) || []; // Historial de cobros
-    let indicePagoActual = null; // Para saber qué pago editar en el modal
+    let servicios = JSON.parse(localStorage.getItem('gb_servicios')) || []; // {id, localId, tipo, monto, detalle}
+    let estadosPago = JSON.parse(localStorage.getItem('gb_estados_pago')) || {}; // { localId: {estado, montoAbono, fecha} }
+    let localSeleccionadoId = null;
 
     // Inicialización
     document.addEventListener('DOMContentLoaded', () => {
         renderLocales();
         renderGastosFijos();
+        renderServicios();
         fetchUF();
-        actualizarSelectMeses();
-        
-        const date = new Date();
-        document.getElementById('mes_liquidacion').value = date.toISOString().slice(0, 7);
         document.getElementById('pago_fecha').valueAsDate = new Date();
     });
 
-    // --- UTILIDADES UI ---
     function switchTab(tabId) {
         document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden-section'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById('sec-' + tabId).classList.remove('hidden-section');
         document.getElementById('tab-' + tabId).classList.add('active');
-        if(tabId === 'cobranza') renderCobranza();
+        if(tabId === 'cobranza') generarLiquidacionGlobal();
+        if(tabId === 'servicios') llenarSelectLocales();
     }
 
     async function fetchUF() {
+        const inputUF = document.getElementById('valor_uf');
         try {
             const res = await fetch('https://mindicador.cl/api/uf');
             const data = await res.json();
-            document.getElementById('valor_uf').value = data.serie[0].valor.toFixed(2);
-        } catch (e) {
-            document.getElementById('valor_uf').value = "36000";
-            alert("Error al obtener UF. Usando valor estimado.");
-        }
+            inputUF.value = data.serie[0].valor.toFixed(2);
+        } catch (e) { inputUF.value = "36000"; alert("Error al obtener UF. Usando valor estimado."); }
     }
 
     function getUF() { return parseFloat(document.getElementById('valor_uf').value) || 0; }
 
-    function formatMoney(amount) {
-        return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount);
-    }
-
-    // --- GESTIÓN DE LOCALES ---
+    // --- LOCALES ---
     function agregarLocal() {
         const nombre = document.getElementById('local_nombre').value.trim();
         const metros = parseFloat(document.getElementById('local_metros').value);
         const ufBase = parseFloat(document.getElementById('local_uf_base').value);
-        const pctAgua = parseFloat(document.getElementById('local_pct_agua').value);
+        const pctAgua = parseFloat(document.getElementById('local_pct_agua').value) || 0;
 
-        if (!nombre || !metros || !ufBase || isNaN(pctAgua)) {
-            alert("Completa todos los campos, incluido el % de agua.");
-            return;
-        }
-
-        // Validar suma de porcentajes (opcional, solo aviso)
-        const sumaPct = locales.reduce((acc, l) => acc + (l.pctAgua || 0), 0) + pctAgua;
-        if (sumaPct > 100) {
-            alert(`Atención: La suma de porcentajes de agua supera el 100% (${sumaPct}%). Verifica los datos.`);
-        }
+        if (!nombre || !metros || !ufBase) { alert("Complete los campos obligatorios."); return; }
 
         locales.push({ id: Date.now(), nombre, metros, ufBase, pctAgua });
         localStorage.setItem('gb_locales', JSON.stringify(locales));
@@ -363,52 +332,45 @@
         document.getElementById('local_pct_agua').value = '';
         
         renderLocales();
-        alert("Local guardado correctamente");
+        alert("Local guardado");
     }
 
     function renderLocales() {
         const tbody = document.getElementById('body_locales');
-        const msg = document.getElementById('msg_sin_locales');
         tbody.innerHTML = '';
+        document.getElementById('msg_sin_locales').style.display = locales.length ? 'none' : 'block';
 
-        if (locales.length === 0) { msg.style.display = 'block'; return; }
-        msg.style.display = 'none';
-
-        locales.forEach((loc, index) => {
-            const tr = document.createElement('tr');
-            tr.className = "hover:bg-blue-50 transition";
-            tr.innerHTML = `
-                <td class="font-bold text-gray-800">${loc.nombre}</td>
-                <td class="text-center text-gray-600">${loc.metros} m²</td>
-                <td class="text-center"><span class="badge badge-water">${loc.pctAgua}%</span></td>
-                <td class="text-center"><span class="badge badge-uf">${loc.ufBase} UF</span></td>
-                <td class="text-right">
-                    <button onclick="eliminarLocal(${index})" class="text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash"></i></button>
-                </td>
-            `;
-            tbody.appendChild(tr);
+        locales.forEach((loc, idx) => {
+            tbody.innerHTML += `
+                <tr class="hover:bg-blue-50">
+                    <td class="font-bold">${loc.nombre}</td>
+                    <td class="text-center">${loc.metros} m²</td>
+                    <td class="text-center"><span class="badge badge-uf">${loc.pctAgua}%</span></td>
+                    <td class="text-center"><span class="badge badge-uf">${loc.ufBase} UF</span></td>
+                    <td class="text-right">
+                        <button onclick="eliminarLocal(${idx})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
         });
     }
 
-    function eliminarLocal(index) {
+    function eliminarLocal(idx) {
         if(confirm('¿Eliminar local?')) {
-            locales.splice(index, 1);
+            locales.splice(idx, 1);
             localStorage.setItem('gb_locales', JSON.stringify(locales));
             renderLocales();
         }
     }
 
-    // --- GESTIÓN GASTOS FIJOS ---
+    // --- GASTOS FIJOS ---
     function agregarGastoFijo() {
         const nombre = document.getElementById('gasto_nombre').value.trim();
         const tipo = document.getElementById('gasto_tipo').value;
         const valor = parseFloat(document.getElementById('gasto_valor').value);
-
-        if (!nombre || !valor) return alert("Completa los datos del gasto");
+        if (!nombre || !valor) return;
 
         gastosFijos.push({ id: Date.now(), nombre, tipo, valor });
         localStorage.setItem('gb_gastos_fijos', JSON.stringify(gastosFijos));
-        
         document.getElementById('gasto_nombre').value = '';
         document.getElementById('gasto_valor').value = '';
         renderGastosFijos();
@@ -416,287 +378,210 @@
 
     function renderGastosFijos() {
         const tbody = document.getElementById('body_gastos_fijos');
-        const msg = document.getElementById('msg_sin_gastos');
         tbody.innerHTML = '';
-        if (gastosFijos.length === 0) { msg.style.display = 'block'; return; }
-        msg.style.display = 'none';
+        document.getElementById('msg_sin_gastos').style.display = gastosFijos.length ? 'none' : 'block';
 
-        gastosFijos.forEach((g, i) => {
-            const tr = document.createElement('tr');
-            const badgeClass = g.tipo === 'UF' ? 'badge-uf' : 'badge-clp';
-            tr.innerHTML = `
-                <td>${g.nombre}</td>
-                <td class="text-center"><span class="badge ${badgeClass}">${g.tipo}</span></td>
-                <td class="text-right font-mono">$${g.valor.toLocaleString('es-CL')}</td>
-                <td class="text-right"><button onclick="eliminarGasto(${i})" class="text-red-500"><i class="fas fa-trash"></i></button></td>
-            `;
-            tbody.appendChild(tr);
+        gastosFijos.forEach((g, idx) => {
+            const badge = g.tipo === 'UF' ? 'badge-uf' : 'badge-clp';
+            tbody.innerHTML += `
+                <tr>
+                    <td>${g.nombre}</td>
+                    <td class="text-center"><span class="badge ${badge}">${g.tipo}</span></td>
+                    <td class="text-right">$${g.valor.toLocaleString()}</td>
+                    <td class="text-right"><button onclick="eliminarGasto(${idx})" class="text-red-500"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
         });
     }
 
-    function eliminarGasto(i) {
-        gastosFijos.splice(i, 1);
+    function eliminarGasto(idx) {
+        gastosFijos.splice(idx, 1);
         localStorage.setItem('gb_gastos_fijos', JSON.stringify(gastosFijos));
         renderGastosFijos();
     }
 
-    // --- LIQUIDACIÓN ---
-    function generarLiquidacion() {
-        const mes = document.getElementById('mes_liquidacion').value;
-        const costoAguaTotal = parseFloat(document.getElementById('costo_total_agua').value) || 0;
-        const costoLuzInput = parseFloat(document.getElementById('costo_total_luz').value) || 0;
-        const esLuzPorKwh = document.getElementById('luz_por_kwh').checked;
-        const uf = getUF();
-
-        if (locales.length === 0) return alert("No hay locales");
-        if (!mes) return alert("Selecciona un mes");
-
-        // 1. Calcular Gastos Comunes (Prorrateo m²)
-        let totalGC_UF = 0;
-        gastosFijos.forEach(g => {
-            totalGC_UF += (g.tipo === 'UF') ? g.valor : (g.valor / uf);
-        });
-        const totalMetros = locales.reduce((sum, l) => sum + l.metros, 0);
-        const factorGC = totalMetros > 0 ? totalGC_UF / totalMetros : 0;
-
-        // 2. Procesar cada local
-        let nuevosCobros = [];
-        let htmlRows = '';
-
-        locales.forEach(loc => {
-            // Arriendo
-            const arriendoTotal = loc.ufBase * 1.19 * uf; // Convertido a pesos directamente para la tabla final
-
-            // Gastos Comunes
-            const gcLocal = factorGC * loc.metros * uf;
-
-            // Agua (PORCENTAJE DIRECTO)
-            const aguaLocal = (loc.pctAgua / 100) * costoAguaTotal;
-
-            // Luz
-            let luzLocal = 0;
-            if (esLuzPorKwh) {
-                // Si es por kWh, idealmente pediríamos lectura. 
-                // Para simplificar en esta versión, si es por kWh, asumimos un consumo promedio o pedimos dato extra.
-                // IMPLEMENTACIÓN SIMPLIFICADA: Si es por kWh, el usuario debe haber ingresado el consumo en otro lado o usamos un factor.
-                // PARA ESTE EJEMPLO: Si marca "por kWh", le pediremos un prompt rápido o asumimos que el input era el total y lo dividimos por m2?
-                // MEJOR: Si es por kWh, no podemos calcular sin lectura individual. 
-                // CAMBIO DE LÓGICA PARA USABILIDAD: Si marca "Por kWh", el sistema asumirá que el "Costo Total Luz" es el PRECIO del kWh, 
-                // y distribuiremos el costo basándonos en los metros cuadrados como proxy de consumo (o podríamos pedir un % similar al agua).
-                // Vamos a usar los metros cuadrados como factor de distribución para la luz si es por kWh, asumiendo proporcionalidad.
-                const precioKwh = costoLuzInput;
-                // Estimación de consumo basada en metros (ej: 10 kWh por m2 comercial mes) - ESTO ES UN EJEMPLO
-                // Lo correcto sería tener un campo "Consumo kWh" en el local. 
-                // SOLUCIÓN PRÁCTICA: Si es por kWh, el usuario ingresa el MONTO TOTAL de la luz, y el sistema lo prorratea por M2 también.
-                // El checkbox "Por kWh" es más para referencia contable.
-                // CORRECCIÓN: El usuario pidió "Luz por watt consumido dando inicio y final". 
-                // Como no tenemos campo de lectura en el local fijo, haremos esto:
-                // Si marca "Por Kwh", el sistema NO calcula automático aquí, o asume prorrateo por m2.
-                // Para cumplir con "inicio y final", deberíamos agregar esos campos en el local. 
-                // POR AHORA: Prorratearemos la luz por METROS CUADRADOS igual que los gastos comunes si es monto total.
-                // Si el usuario quiere detalle por medidor, debería agregarlo en configuración del local.
-                // Hagámoslo simple: Luz se prorratea por M2 si es monto total.
-                luzLocal = (loc.metros / totalMetros) * costoLuzInput; 
-            } else {
-                // Monto total de luz prorrateado por M2
-                luzLocal = (loc.metros / totalMetros) * costoLuzInput;
-            }
-
-            const totalLocal = arriendoTotal + gcLocal + aguaLocal + luzLocal;
-
-            // Guardar objeto de cobro
-            const cobro = {
-                id: Date.now() + Math.random(),
-                mes: mes,
-                localId: loc.id,
-                localNombre: loc.nombre,
-                detalles: {
-                    arriendo: arriendoTotal,
-                    gastosComunes: gcLocal,
-                    agua: aguaLocal,
-                    luz: luzLocal
-                },
-                total: totalLocal,
-                estado: 'pendiente', // pendiente, abonado, pagado
-                montoAbonado: 0,
-                fechaPago: null
-            };
-            nuevosCobros.push(cobro);
-
-            // HTML Fila
-            htmlRows += `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-3 font-bold text-gray-700">${loc.nombre}</td>
-                    <td class="p-3 text-right text-gray-600">${formatMoney(arriendoTotal)}</td>
-                    <td class="p-3 text-right text-gray-600">${formatMoney(gcLocal)}</td>
-                    <td class="p-3 text-right text-blue-600 font-medium">${formatMoney(aguaLocal)}</td>
-                    <td class="p-3 text-right text-yellow-600 font-medium">${formatMoney(luzLocal)}</td>
-                    <td class="p-3 text-right font-bold text-gray-900 bg-gray-100">${formatMoney(totalLocal)}</td>
-                </tr>
-            `;
-        });
-
-        // Guardar en historial
-        liquidaciones = [...liquidaciones, ...nuevosCobros];
-        localStorage.setItem('gb_liquidaciones', JSON.stringify(liquidaciones));
-        actualizarSelectMeses();
-
-        document.getElementById('body_resultados').innerHTML = htmlRows;
-        document.getElementById('resultado_liquidacion').classList.remove('hidden');
-        alert("Liquidación generada y guardada en Cobranza.");
+    // --- SERVICIOS (AGUA Y LUZ) ---
+    function llenarSelectLocales() {
+        const sel = document.getElementById('luz_local_select');
+        sel.innerHTML = '<option value="">Seleccione Local...</option>';
+        locales.forEach(l => sel.innerHTML += `<option value="${l.id}">${l.nombre}</option>`);
     }
 
-    function actualizarSelectMeses() {
-        const select = document.getElementById('filtro_mes_cobranza');
-        const mesesUnicos = [...new Set(liquidaciones.map(l => l.mes))].sort().reverse();
-        select.innerHTML = '<option value="">Todos los Meses</option>';
-        mesesUnicos.forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m;
-            opt.textContent = m;
-            select.appendChild(opt);
+    function guardarServicio(tipo) {
+        if (tipo === 'agua') {
+            const totalFactura = parseFloat(document.getElementById('agua_total_factura').value);
+            if (!totalFactura) return alert("Ingrese monto total de agua");
+
+            // Limpiar servicios de agua anteriores
+            servicios = servicios.filter(s => s.tipo !== 'agua');
+
+            // Distribuir por porcentaje
+            locales.forEach(loc => {
+                if (loc.pctAgua > 0) {
+                    const monto = totalFactura * (loc.pctAgua / 100);
+                    servicios.push({
+                        id: Date.now() + Math.random(),
+                        localId: loc.id,
+                        tipo: 'agua',
+                        monto: monto,
+                        detalle: `${loc.pctAgua}% de $${totalFactura.toLocaleString()}`
+                    });
+                }
+            });
+            document.getElementById('agua_total_factura').value = '';
+            alert("Agua distribuida correctamente");
+        }
+        localStorage.setItem('gb_servicios', JSON.stringify(servicios));
+        renderServicios();
+    }
+
+    function guardarConsumoLuz() {
+        const localId = parseInt(document.getElementById('luz_local_select').value);
+        const kwh = parseFloat(document.getElementById('luz_kwh').value);
+        const valKwh = parseFloat(document.getElementById('luz_valor_kwh').value);
+
+        if (!localId || !kwh || !valKwh) return alert("Complete todos los datos de luz");
+
+        const monto = kwh * valKwh;
+        const local = locales.find(l => l.id === localId);
+
+        // Eliminar registro anterior de luz para este local si existe
+        servicios = servicios.filter(s => !(s.localId === localId && s.tipo === 'luz'));
+
+        servicios.push({
+            id: Date.now(),
+            localId: localId,
+            tipo: 'luz',
+            monto: monto,
+            detalle: `${kwh} kWh x $${valKwh}`
         });
+
+        localStorage.setItem('gb_servicios', JSON.stringify(servicios));
+        document.getElementById('luz_kwh').value = '';
+        renderServicios();
+        alert("Consumo de luz agregado");
+    }
+
+    function renderServicios() {
+        const tbody = document.getElementById('body_servicios');
+        tbody.innerHTML = '';
+        document.getElementById('msg_sin_servicios').style.display = servicios.length ? 'none' : 'block';
+
+        servicios.forEach((s, idx) => {
+            const loc = locales.find(l => l.id === s.localId);
+            const icon = s.tipo === 'agua' ? 'fa-tint text-blue-500' : 'fa-bolt text-yellow-500';
+            tbody.innerHTML += `
+                <tr>
+                    <td class="font-bold">${loc ? loc.nombre : 'Desconocido'}</td>
+                    <td class="text-center"><i class="fas ${icon}"></i> ${s.tipo.toUpperCase()}</td>
+                    <td class="text-sm text-gray-500">${s.detalle}</td>
+                    <td class="text-right font-mono">$${s.monto.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="text-right"><button onclick="eliminarServicio(${idx})" class="text-red-500"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+        });
+    }
+
+    function eliminarServicio(idx) {
+        servicios.splice(idx, 1);
+        localStorage.setItem('gb_servicios', JSON.stringify(servicios));
+        renderServicios();
     }
 
     // --- COBRANZA Y PAGOS ---
-    function renderCobranza() {
-        const filtroMes = document.getElementById('filtro_mes_cobranza').value;
+    function generarLiquidacionGlobal() {
+        if (locales.length === 0) return;
+        const uf = getUF();
         const tbody = document.getElementById('body_cobranza');
-        const msg = document.getElementById('msg_sin_cobranza');
         tbody.innerHTML = '';
+        document.getElementById('msg_sin_cobranza').style.display = 'none';
 
-        let datos = liquidaciones;
-        if (filtroMes) {
-            datos = datos.filter(l => l.mes === filtroMes);
-        }
+        // Calcular total gastos comunes
+        let totalGC_UF = 0;
+        gastosFijos.forEach(g => totalGC_UF += (g.tipo === 'UF' ? g.valor : g.valor/uf));
+        const totalMetros = locales.reduce((sum, l) => sum + l.metros, 0);
+        const factorGC = totalMetros > 0 ? totalGC_UF / totalMetros : 0;
 
-        if (datos.length === 0) { msg.style.display = 'block'; return; }
-        msg.style.display = 'none';
+        locales.forEach(loc => {
+            // 1. Arriendo + IVA
+            const arriendoTotal = loc.ufBase * 1.19;
 
-        datos.forEach((item, index) => {
-            // Calcular saldos
-            let saldoPendiente = item.total;
-            let claseEstado = 'status-pendiente';
-            let textoEstado = 'Pendiente';
-            let subtexto = '';
+            // 2. Gastos Comunes
+            const gcLocal = loc.metros * factorGC;
 
-            if (item.estado === 'pagado') {
-                saldoPendiente = 0;
-                claseEstado = 'status-pagado';
-                textoEstado = 'PAGADO';
-                subtexto = `<div class="text-xs mt-1"><i class="fas fa-check-circle"></i> ${item.fechaPago}</div>`;
-            } else if (item.estado === 'abonado') {
-                saldoPendiente = item.total - item.montoAbonado;
-                claseEstado = 'status-abonado';
-                textoEstado = 'ABONADO';
-                subtexto = `<div class="text-xs mt-1">Abonó: ${formatMoney(item.montoAbonado)}</div>`;
-            }
+            // 3. Agua (de servicios)
+            const servicioAgua = servicios.find(s => s.localId === loc.id && s.tipo === 'agua');
+            const montoAgua = servicioAgua ? servicioAgua.monto : 0;
 
-            const tr = document.createElement('tr');
-            tr.className = `border-b hover:bg-gray-50 ${claseEstado}`;
-            tr.innerHTML = `
-                <td class="p-3">
-                    <div class="font-bold text-gray-800">${item.localNombre}</div>
-                    <div class="text-xs text-gray-500">Mes: ${item.mes}</div>
-                    ${subtexto}
-                </td>
-                <td class="p-3 text-right font-mono text-gray-700">${formatMoney(item.total)}</td>
-                <td class="p-3 text-center font-bold text-sm uppercase tracking-wider">${textoEstado}</td>
-                <td class="p-3 text-right font-bold text-red-600">${formatMoney(saldoPendiente)}</td>
-                <td class="p-3 text-center">
-                    <button onclick="abrirModalPago(${liquidaciones.indexOf(item)})" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 shadow">
-                        <i class="fas fa-edit mr-1"></i> Gestionar
-                    </button>
-                </td>
+            // 4. Luz (de servicios)
+            const servicioLuz = servicios.find(s => s.localId === loc.id && s.tipo === 'luz');
+            const montoLuz = servicioLuz ? servicioLuz.monto : 0;
+
+            const totalPagar = arriendoTotal + gcLocal + montoAgua + montoLuz;
+
+            // Estado de pago
+            const estado = estadosPago[loc.id] || { estado: 'pendiente', montoAbono: 0, fecha: '' };
+            let claseFila = 'status-pendiente';
+            if (estado.estado === 'abonado') claseFila = 'status-abonado';
+            if (estado.estado === 'pagado') claseFila = 'status-pagado';
+
+            tbody.innerHTML += `
+                <tr class="${claseFila} transition hover:opacity-90">
+                    <td class="font-bold text-gray-800">${loc.nombre}</td>
+                    <td class="text-right">$${arriendoTotal.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
+                    <td class="text-right">$${gcLocal.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
+                    <td class="text-right text-blue-600">$${montoAgua.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
+                    <td class="text-right text-yellow-600">$${montoLuz.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
+                    <td class="text-right font-bold bg-gray-50 border-l">$${totalPagar.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
+                    <td class="text-center">
+                        <span class="px-2 py-1 rounded text-xs font-bold uppercase">${estado.estado}</span>
+                    </td>
+                    <td class="text-center">
+                        <button onclick="abrirModalPago(${loc.id}, ${totalPagar})" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                            <i class="fas fa-edit"></i> Gestionar
+                        </button>
+                    </td>
+                </tr>
             `;
-            tbody.appendChild(tr);
         });
     }
 
-    // --- MODAL DE PAGO LOGIC ---
-    function abrirModalPago(realIndex) {
-        indicePagoActual = realIndex;
-        const item = liquidaciones[realIndex];
-        
-        document.getElementById('modal_info_local').textContent = `${item.localNombre} - Mes ${item.mes} | Total: ${formatMoney(item.total)}`;
-        document.getElementById('pago_estado').value = item.estado;
-        document.getElementById('pago_monto').value = item.montoAbonado || '';
-        document.getElementById('pago_fecha').value = item.fechaPago || new Date().toISOString().split('T')[0];
-        
-        toggleCamposPago();
+    // --- GESTIÓN DE PAGOS (MODAL) ---
+    function abrirModalPago(id, total) {
+        localSeleccionadoId = id;
+        const loc = locales.find(l => l.id === id);
+        const estado = estadosPago[id] || { estado: 'pendiente', montoAbono: 0, fecha: '' };
+
+        document.getElementById('modal_local_nombre').innerText = loc.nombre;
+        document.getElementById('modal_total_deuda').innerText = '$' + total.toLocaleString();
+        document.getElementById('pago_estado').value = estado.estado;
+        document.getElementById('pago_monto').value = estado.montoAbono || '';
+        document.getElementById('pago_fecha').value = estado.fecha || new Date().toISOString().split('T')[0];
+
+        toggleCampoAbono();
         document.getElementById('modal_pago').classList.remove('hidden');
-        document.getElementById('modal_pago').classList.add('flex');
     }
 
-    function cerrarModalPago() {
+    function toggleCampoAbono() {
+        const est = document.getElementById('pago_estado').value;
+        document.getElementById('div_monto_abono').classList.toggle('hidden', est !== 'abonado');
+        document.getElementById('div_fecha_pago').classList.toggle('hidden', est === 'pendiente');
+    }
+
+    function cerrarModal() {
         document.getElementById('modal_pago').classList.add('hidden');
-        document.getElementById('modal_pago').classList.remove('flex');
-        indicePagoActual = null;
+        localSeleccionadoId = null;
     }
 
-    function toggleCamposPago() {
+    function confirmarPago() {
         const estado = document.getElementById('pago_estado').value;
-        const divMonto = document.getElementById('campo_monto_abono');
-        const divFecha = document.getElementById('campo_fecha_pago');
+        const monto = parseFloat(document.getElementById('pago_monto').value) || 0;
+        const fecha = document.getElementById('pago_fecha').value;
 
-        divMonto.classList.add('hidden');
-        divFecha.classList.add('hidden');
-
-        if (estado === 'abonado') {
-            divMonto.classList.remove('hidden');
-            divFecha.classList.remove('hidden');
-        } else if (estado === 'pagado') {
-            divFecha.classList.remove('hidden');
-        }
-    }
-
-    function guardarPago() {
-        if (indicePagoActual === null) return;
-
-        const estado = document.getElementById('pago_estado').value;
-        const item = liquidaciones[indicePagoActual];
+        estadosPago[localSeleccionadoId] = { estado, montoAbono: monto, fecha };
+        localStorage.setItem('gb_estados_pago', JSON.stringify(estadosPago));
         
-        item.estado = estado;
-        
-        if (estado === 'abonado') {
-            const monto = parseFloat(document.getElementById('pago_monto').value) || 0;
-            if (monto >= item.total) {
-                alert("El monto abonado es mayor o igual al total. ¿Deseas marcarlo como PAGADO?");
-                item.estado = 'pagado';
-                item.montoAbonado = item.total;
-            } else {
-                item.montoAbonado = monto;
-            }
-            item.fechaPago = document.getElementById('pago_fecha').value;
-        } else if (estado === 'pagado') {
-            item.montoAbonado = item.total;
-            item.fechaPago = document.getElementById('pago_fecha').value;
-        } else {
-            item.montoAbonado = 0;
-            item.fechaPago = null;
-        }
-
-        localStorage.setItem('gb_liquidaciones', JSON.stringify(liquidaciones));
-        cerrarModalPago();
-        renderCobranza();
-        alert("Estado de pago actualizado correctamente.");
-    }
-
-    // --- PDF ---
-    function descargarPDF() {
-        // Implementación básica similar a la anterior, incluyendo columnas de Agua y Luz
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        doc.text("Liquidación Detallada", 14, 20);
-        doc.text(`UF: $${getUF()}`, 14, 30);
-        
-        const rows = [];
-        // Tomar los últimos calculados (difícil de recuperar exactos sin variable global temporal, 
-        // pero podemos leer del DOM o guardar en variable global 'ultimaLiquidacionDetalles')
-        // Para simplificar, usaremos la última generación en memoria si existiera, 
-        // o reconstruir desde liquidaciones recientes.
-        alert("Para descargar el PDF específico de esta vista, genera la liquidación nuevamente o usa la vista de Cobranza para imprimir estados de cuenta individuales (funcionalidad en desarrollo).");
+        cerrarModal();
+        generarLiquidacionGlobal(); // Refrescar tabla
+        alert("Estado de pago actualizado");
     }
 </script>
 
