@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestión de Arriendos{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="{{ url_for('index') }}" class="brand">🏢 Gestión de Locales</a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('listar_locales') }}">Locales</a></li>
+                <li><a href="{{ url_for('gestionar_uf') }}">UF Diarias</a></li>
+                <li><a href="{{ url_for('listar_arriendos') }}">Arriendos</a></li>
+                <li><a href="{{ url_for('listar_gastos_comunes') }}">Gastos Comunes</a></li>
+                <li><a href="{{ url_for('listar_consumos') }}">Consumos</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Sistema de Gestión de Locales Comerciales</p>
+        </div>
+    </footer>
+</body>
+</html>

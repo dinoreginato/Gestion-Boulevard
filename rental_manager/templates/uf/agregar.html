@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar UF - Gestión de Locales{% endblock %}
+
+{% block content %}
+<div class="section">
+    <h1>Registrar Valor de UF</h1>
+    
+    <form method="POST" class="form">
+        <div class="form-group">
+            <label for="fecha">Fecha:</label>
+            <input type="date" id="fecha" name="fecha" required value="{{ today }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="valor">Valor de la UF ($):</label>
+            <input type="number" id="valor" name="valor" step="0.01" required placeholder="Ej: 36500.50">
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Guardar UF</button>
+            <a href="{{ url_for('gestionar_uf') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fechaInput = document.getElementById('fecha');
+        if (!fechaInput.value) {
+            fechaInput.valueAsDate = new Date();
+        }
+    });
+</script>
+{% endblock %}

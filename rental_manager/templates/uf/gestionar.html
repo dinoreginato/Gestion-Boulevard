@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}UF Diarias - Gestión de Locales{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="section-header">
+        <h1>UF Diarias</h1>
+        <a href="{{ url_for('agregar_uf') }}" class="btn btn-primary">+ Registrar UF</a>
+    </div>
+    
+    {% if uf_registros %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Valor UF</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in uf_registros %}
+            <tr>
+                <td>{{ registro.fecha }}</td>
+                <td>${{ "%.2f"|format(registro.valor_uf) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <p>No hay registros de UF. Es necesario registrar la UF del día para gestionar arriendos y gastos comunes.</p>
+        <a href="{{ url_for('agregar_uf') }}" class="btn btn-primary">Registrar primera UF</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

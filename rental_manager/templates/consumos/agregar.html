@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Consumo - Gestión de Locales{% endblock %}
+
+{% block content %}
+<div class="section">
+    <h1>Registrar Consumo</h1>
+    
+    <form method="POST" class="form">
+        <div class="form-group">
+            <label for="tipo">Tipo de Consumo:</label>
+            <select id="tipo" name="tipo" required onchange="toggleCampos()">
+                <option value="agua">Agua (m³)</option>
+                <option value="luz">Luz (kWh)</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="local_id">Local:</label>
+            <select id="local_id" name="local_id" required>
+                <option value="">-- Seleccione un local --</option>
+                {% for local in locales %}
+                <option value="{{ local.id }}">{{ local.nombre }} ({{ local.metros_cuadrados }} m²)</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="mes">Mes:</label>
+                <select id="mes" name="mes" required>
+                    {% for i in range(1, 13) %}
+                    <option value="{{ i }}">{{ "%02d"|format(i) }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="anio">Año:</label>
+                <input type="number" id="anio" name="anio" min="2020" max="2030" value="2024" required>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="lectura_inicial">Lectura Inicial:</label>
+                <input type="number" id="lectura_inicial" name="lectura_inicial" step="0.01" required placeholder="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="lectura_final">Lectura Final:</label>
+                <input type="number" id="lectura_final" name="lectura_final" step="0.01" required placeholder="0">
+            </div>
+        </div>
+        
+        <!-- Campos específicos para agua -->
+        <div id="campo_agua" class="form-group" style="display: none;">
+            <label for="costo_total_agua">Costo Total del Agua (mes):</label>
+            <input type="number" id="costo_total_agua" name="costo_total_agua" step="0.01" placeholder="Ingrese el costo total de la cuenta de agua">
+            <small>El monto a pagar se calculará proporcionalmente según el consumo de este local respecto al total.</small>
+        </div>
+        
+        <!-- Campos específicos para luz -->
+        <div id="campo_luz" class="form-group" style="display: none;">
+            <label for="precio_kwh">Precio por kWh ($):</label>
+            <input type="number" id="precio_kwh" name="precio_kwh" step="0.01" placeholder="Ej: 150">
+        </div>
+        
+        <div class="form-group">
+            <label for="fecha_gestion">Fecha de Gestión:</label>
+            <input type="date" id="fecha_gestion" name="fecha_gestion" required>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Guardar Consumo</button>
+            <a href="{{ url_for('listar_consumos') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fechaInput = document.getElementById('fecha_gestion');
+        if (!fechaInput.value) {
+            fechaInput.valueAsDate = new Date();
+        }
+        
+        const date = new Date();
+        document.getElementById('mes').value = date.getMonth() + 1;
+        
+        toggleCampos();
+    });
+    
+    function toggleCampos() {
+        const tipo = document.getElementById('tipo').value;
+        const campoAgua = document.getElementById('campo_agua');
+        const campoLuz = document.getElementById('campo_luz');
+        const lecturaInicial = document.getElementById('lectura_inicial');
+        const lecturaFinal = document.getElementById('lectura_final');
+        
+        if (tipo === 'agua') {
+            campoAgua.style.display = 'block';
+            campoLuz.style.display = 'none';
+            document.getElementById('costo_total_agua').required = true;
+            document.getElementById('precio_kwh').required = false;
+            lecturaInicial.placeholder = "Ej: 100";
+            lecturaFinal.placeholder = "Ej: 150";
+        } else {
+            campoAgua.style.display = 'none';
+            campoLuz.style.display = 'block';
+            document.getElementById('costo_total_agua').required = false;
+            document.getElementById('precio_kwh').required = true;
+            lecturaInicial.placeholder = "Ej: 5000";
+            lecturaFinal.placeholder = "Ej: 5500";
+        }
+    }
+</script>
+{% endblock %}

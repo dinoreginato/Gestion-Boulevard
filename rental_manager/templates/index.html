@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - Gestión de Locales{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h1>Bienvenido al Sistema de Gestión de Locales Comerciales</h1>
+    
+    <div class="cards-grid">
+        <div class="card">
+            <h3>🏢 Locales</h3>
+            <p>Gestione los locales comerciales con sus metros cuadrados</p>
+            <a href="{{ url_for('listar_locales') }}" class="btn btn-primary">Ver Locales</a>
+        </div>
+        
+        <div class="card">
+            <h3>💰 UF Diarias</h3>
+            <p>Registre el valor de la UF para cada día</p>
+            <a href="{{ url_for('gestionar_uf') }}" class="btn btn-primary">Gestionar UF</a>
+        </div>
+        
+        <div class="card">
+            <h3>📋 Arriendos</h3>
+            <p>Controle los cobros de arriendos en UF + IVA</p>
+            <a href="{{ url_for('listar_arriendos') }}" class="btn btn-primary">Ver Arriendos</a>
+        </div>
+        
+        <div class="card">
+            <h3>🔧 Gastos Comunes</h3>
+            <p>Administre gastos comunes y prorrateo por metros²</p>
+            <a href="{{ url_for('listar_gastos_comunes') }}" class="btn btn-primary">Ver Gastos</a>
+        </div>
+        
+        <div class="card">
+            <h3>💧 Luz y Agua</h3>
+            <p>Registre consumos de agua y electricidad</p>
+            <a href="{{ url_for('listar_consumos') }}" class="btn btn-primary">Ver Consumos</a>
+        </div>
+    </div>
+    
+    {% if locales %}
+    <div class="section">
+        <h2>Locales Registrados</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Metros Cuadrados</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for local in locales %}
+                <tr>
+                    <td>{{ local.nombre }}</td>
+                    <td>{{ local.metros_cuadrados }} m²</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

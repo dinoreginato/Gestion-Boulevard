@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Locales - Gestión de Locales{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="section-header">
+        <h1>Locales Comerciales</h1>
+        <a href="{{ url_for('agregar_local') }}" class="btn btn-primary">+ Agregar Local</a>
+    </div>
+    
+    {% if locales %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Metros Cuadrados</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for local in locales %}
+            <tr>
+                <td>{{ local.id }}</td>
+                <td>{{ local.nombre }}</td>
+                <td>{{ local.metros_cuadrados }} m²</td>
+                <td>
+                    <a href="#" class="btn btn-sm btn-secondary">Editar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <p>No hay locales registrados aún.</p>
+        <a href="{{ url_for('agregar_local') }}" class="btn btn-primary">Agregar primer local</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

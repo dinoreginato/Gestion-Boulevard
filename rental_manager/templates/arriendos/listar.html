@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Arriendos - Gestión de Locales{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="section-header">
+        <h1>Arriendos Registrados</h1>
+        <a href="{{ url_for('agregar_arriendo') }}" class="btn btn-primary">+ Registrar Arriendo</a>
+    </div>
+    
+    {% if arriendos %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Local</th>
+                <th>Mes/Año</th>
+                <th>UF Arriendo</th>
+                <th>UF Aplicada</th>
+                <th>Subtotal</th>
+                <th>IVA (19%)</th>
+                <th>Total</th>
+                <th>Fecha Gestión</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for arriendo in arriendos %}
+            <tr>
+                <td>{{ arriendo.nombre_local }}</td>
+                <td>{{ "%02d"|format(arriendo.mes) }}/{{ arriendo.anio }}</td>
+                <td>{{ "%.2f"|format(arriendo.valor_uf_arriendo) }} UF</td>
+                <td>${{ "%.2f"|format(arriendo.uf_aplicada) }}</td>
+                <td>${{ "%.2f"|format(arriendo.valor_uf_arriendo * arriendo.uf_aplicada) }}</td>
+                <td>${{ "%.2f"|format(arriendo.iva) }}</td>
+                <td><strong>${{ "%.2f"|format(arriendo.total_pesos) }}</strong></td>
+                <td>{{ arriendo.fecha_gestion }}</td>
+                <td><span class="badge badge-{{ arriendo.estado }}">{{ arriendo.estado }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <p>No hay arriendos registrados aún.</p>
+        <a href="{{ url_for('agregar_arriendo') }}" class="btn btn-primary">Registrar primer arriendo</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

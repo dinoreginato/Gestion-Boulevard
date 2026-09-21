@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Consumos de Agua y Luz - Gestión de Locales{% endblock %}
+
+{% block content %}
+<div class="section">
+    <div class="section-header">
+        <h1>Consumos de Agua y Luz</h1>
+        <a href="{{ url_for('agregar_consumo') }}" class="btn btn-primary">+ Registrar Consumo</a>
+    </div>
+    
+    <h2>💧 Consumos de Agua</h2>
+    {% if aguas %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Local</th>
+                <th>Mes/Año</th>
+                <th>Lectura Inicial</th>
+                <th>Lectura Final</th>
+                <th>Consumo (m³)</th>
+                <th>% Participación</th>
+                <th>Monto a Pagar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for agua in aguas %}
+            <tr>
+                <td>{{ agua.nombre_local }}</td>
+                <td>{{ "%02d"|format(agua.mes) }}/{{ agua.anio }}</td>
+                <td>{{ "%.2f"|format(agua.lectura_inicial) }}</td>
+                <td>{{ "%.2f"|format(agua.lectura_final) }}</td>
+                <td>{{ "%.2f"|format(agua.consumo_m3) }} m³</td>
+                <td>{{ "%.2f"|format(agua.porcentaje_consumo) }}%</td>
+                <td>${{ "%.2f"|format(agua.monto_a_pagar) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No hay consumos de agua registrados.</p>
+    {% endif %}
+    
+    <h2>💡 Consumos de Luz</h2>
+    {% if luces %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Local</th>
+                <th>Mes/Año</th>
+                <th>Lectura Inicial</th>
+                <th>Lectura Final</th>
+                <th>Consumo (kWh)</th>
+                <th>Precio kWh</th>
+                <th>Monto a Pagar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for luz in luces %}
+            <tr>
+                <td>{{ luz.nombre_local }}</td>
+                <td>{{ "%02d"|format(luz.mes) }}/{{ luz.anio }}</td>
+                <td>{{ "%.2f"|format(luz.lectura_inicial) }}</td>
+                <td>{{ "%.2f"|format(luz.lectura_final) }}</td>
+                <td>{{ "%.2f"|format(luz.consumo_kwh) }} kWh</td>
+                <td>${{ "%.2f"|format(luz.precio_kwh) }}</td>
+                <td><strong>${{ "%.2f"|format(luz.monto_a_pagar) }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No hay consumos de luz registrados.</p>
+    {% endif %}
+</div>
+{% endblock %}
