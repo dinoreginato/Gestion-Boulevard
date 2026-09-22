@@ -6,7 +6,7 @@
     <title>Gestión Boulevard - Administración Integral</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Librerías PDF -->
+    <!-- Librerías para PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <!-- Iconos -->
@@ -17,8 +17,11 @@
         .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
         .btn-primary { background-color: #2563eb; color: white; padding: 0.6rem 1.2rem; border-radius: 0.5rem; transition: all 0.2s; font-weight: 500; }
         .btn-primary:hover { background-color: #1d4ed8; transform: translateY(-1px); }
+        .btn-edit { background-color: #f59e0b; color: white; padding: 0.4rem 0.8rem; border-radius: 0.5rem; font-size: 0.85rem; }
+        .btn-edit:hover { background-color: #d97706; }
         .input-field { width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.6rem; outline: none; transition: border-color 0.2s; }
         .input-field:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
+        .input-field:disabled { background-color: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
         
         /* Tabs */
         .tabs-container { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 1.5rem; background: white; border-radius: 8px 8px 0 0; overflow: hidden; }
@@ -43,7 +46,7 @@
         .status-pagado { background-color: #dcfce7; color: #166534; }
         
         .empty-state { text-align: center; padding: 3rem; color: #9ca3af; font-style: italic; }
-        
+
         /* Modal */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 50; }
         .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
@@ -71,18 +74,26 @@
 
     <!-- Navegación por Pestañas -->
     <div class="tabs-container shadow-sm">
-        <button onclick="switchTab('locales')" class="tab-btn active" id="tab-locales"><i class="fas fa-store mr-2"></i>Locales</button>
-        <button onclick="switchTab('gastos-config')" class="tab-btn" id="tab-gastos-config"><i class="fas fa-cogs mr-2"></i>Gastos Fijos</button>
-        <button onclick="switchTab('consumos')" class="tab-btn" id="tab-consumos"><i class="fas fa-tint mr-2"></i>Agua y Luz</button>
-        <button onclick="switchTab('cobranza')" class="tab-btn" id="tab-cobranza"><i class="fas fa-file-invoice-dollar mr-2"></i>Cobranza Mensual</button>
+        <button onclick="switchTab('locales')" class="tab-btn active" id="tab-locales">
+            <i class="fas fa-store mr-2"></i>Locales
+        </button>
+        <button onclick="switchTab('consumos')" class="tab-btn" id="tab-consumos">
+            <i class="fas fa-tint mr-2"></i>Agua y Luz
+        </button>
+        <button onclick="switchTab('gastos-config')" class="tab-btn" id="tab-gastos-config">
+            <i class="fas fa-cogs mr-2"></i>Gastos Fijos
+        </button>
+        <button onclick="switchTab('cobranza')" class="tab-btn" id="tab-cobranza">
+            <i class="fas fa-file-invoice-dollar mr-2"></i>Cobranza General
+        </button>
     </div>
 
     <!-- SECCIÓN 1: LOCALES -->
     <div id="sec-locales" class="section-content animate-fade-in">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Formulario Local -->
+            <!-- Formulario Nuevo/Editar Local -->
             <div class="card p-6 h-fit">
-                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2">Gestión de Local</h3>
+                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2">Gestión de Locales</h3>
                 <input type="hidden" id="local_id_edit">
                 <div class="space-y-4">
                     <div>
@@ -91,7 +102,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Metros Cuadrados (m²)</label>
-                        <input type="number" id="local_metros" placeholder="Ej: 45" class="input-field" step="0.01">
+                        <input type="number" id="local_metros" placeholder="Ej: 45.5" class="input-field" step="0.01">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Arriendo Base (UF)</label>
@@ -99,31 +110,33 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">% Consumo Agua</label>
-                        <input type="number" id="local_porcentaje_agua" placeholder="Ej: 10 (sobre 100%)" class="input-field" step="0.1" max="100">
-                        <p class="text-xs text-gray-400 mt-1">Porcentaje fijo que paga este local del total de la factura de agua.</p>
+                        <input type="number" id="local_porcentaje_agua" placeholder="Ej: 10" class="input-field" step="0.1" max="100">
+                        <p class="text-xs text-gray-500 mt-1">Porcentaje sobre el total de la factura de agua.</p>
                     </div>
                     <button onclick="guardarLocal()" class="btn-primary w-full mt-2 shadow-md">
                         <i class="fas fa-save mr-2"></i>Guardar Local
                     </button>
-                    <button onclick="cancelarEdicion()" id="btn_cancelar_local" class="w-full text-red-500 text-sm hover:underline hidden mt-2">Cancelar Edición</button>
+                    <button onclick="cancelarEdicion()" class="w-full text-gray-500 text-sm hover:underline hidden" id="btn_cancelar">Cancelar Edición</button>
                 </div>
             </div>
 
-            <!-- Lista Locales -->
+            <!-- Lista de Locales -->
             <div class="lg:col-span-2 card p-6">
-                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2">Listado de Locales</h3>
+                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2">Listado de Locales Registrados</h3>
                 <div class="overflow-x-auto">
                     <table id="tabla_locales">
                         <thead>
                             <tr>
                                 <th>Nombre</th>
-                                <th class="text-center">Metros</th>
+                                <th class="text-center">Metros (m²)</th>
                                 <th class="text-center">% Agua</th>
-                                <th class="text-center">Arriendo</th>
+                                <th class="text-center">Arriendo Base</th>
                                 <th class="text-right">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="body_locales"></tbody>
+                        <tbody id="body_locales">
+                            <!-- Se llena con JS -->
+                        </tbody>
                     </table>
                     <div id="msg_sin_locales" class="empty-state">
                         <i class="fas fa-box-open text-4xl mb-2"></i>
@@ -134,107 +147,53 @@
         </div>
     </div>
 
-    <!-- SECCIÓN 2: CONFIG GASTOS FIJOS (Y VARIABLES) -->
-    <div id="sec-gastos-config" class="section-content hidden-section animate-fade-in">
-        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded">
-            <p class="text-sm text-yellow-700">
-                <strong>Consejo:</strong> Para gastos variables (ej: reparaciones), crea el concepto aquí con valor <strong>$0</strong>. Luego, al momento de liquidar el mes, podrás editar ese valor específicamente para ese periodo.
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Formulario Gasto -->
-            <div class="card p-6 h-fit">
-                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2">Nuevo Gasto Fijo</h3>
-                <input type="hidden" id="gasto_id_edit">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Concepto</label>
-                        <input type="text" id="gasto_nombre" placeholder="Ej: Conserje, Ascensor, Mant. Jardín" class="input-field">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Tipo de Valor Base</label>
-                        <select id="gasto_tipo" class="input-field bg-white">
-                            <option value="UF">Unidades de Fomento (UF)</option>
-                            <option value="CLP">Pesos Chilenos (CLP)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Monto Base (Sugerido)</label>
-                        <input type="number" id="gasto_valor" placeholder="Valor habitual (puede ser 0)" class="input-field" step="0.01">
-                    </div>
-                    <button onclick="guardarGasto()" class="btn-primary w-full mt-2 shadow-md">
-                        <i class="fas fa-save mr-2"></i>Guardar Gasto
-                    </button>
-                    <button onclick="cancelarEdicionGasto()" id="btn_cancelar_gasto" class="w-full text-red-500 text-sm hover:underline hidden mt-2">Cancelar Edición</button>
-                </div>
-            </div>
-
-            <!-- Lista Gastos -->
-            <div class="lg:col-span-2 card p-6">
-                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2">Gastos Configurados</h3>
-                <div class="overflow-x-auto">
-                    <table id="tabla_gastos_fijos">
-                        <thead>
-                            <tr>
-                                <th>Concepto</th>
-                                <th class="text-center">Tipo</th>
-                                <th class="text-right">Valor Base</th>
-                                <th class="text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="body_gastos_fijos"></tbody>
-                    </table>
-                    <div id="msg_sin_gastos" class="empty-state">
-                        <i class="fas fa-list-ul text-4xl mb-2"></i>
-                        <p>No hay gastos configurados.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SECCIÓN 3: CONSUMOS (AGUA Y LUZ) -->
+    <!-- SECCIÓN 2: AGUA Y LUZ -->
     <div id="sec-consumos" class="section-content hidden-section animate-fade-in">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <!-- Tarjeta Agua -->
             <div class="card p-6 border-t-4 border-blue-500">
-                <h3 class="font-bold text-lg mb-4 text-blue-700"><i class="fas fa-tint mr-2"></i>Registrar Factura de Agua</h3>
+                <h3 class="font-bold text-lg mb-4 text-blue-700 flex items-center">
+                    <i class="fas fa-tint mr-2"></i> Registrar Factura de Agua
+                </h3>
+                <p class="text-sm text-gray-500 mb-4">Ingrese el monto TOTAL de la factura. El sistema distribuirá el costo según el % definido en cada local.</p>
                 <div class="space-y-3">
-                    <label class="block text-sm font-medium text-gray-600">Monto Total de la Factura ($)</label>
-                    <input type="number" id="agua_total_factura" class="input-field text-lg font-bold" placeholder="Ej: 150000">
-                    <p class="text-xs text-gray-500">El sistema distribuirá este monto según el % definido en cada local.</p>
-                    <button onclick="registrarAgua()" class="btn-primary w-full bg-blue-600 hover:bg-blue-700 mt-2">
-                        <i class="fas fa-save mr-2"></i>Guardar Factura Mes Actual
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Monto Total Factura ($)</label>
+                        <input type="number" id="agua_total_factura" class="input-field" placeholder="Ej: 150000">
+                    </div>
+                    <button onclick="registrarAgua()" class="btn-primary w-full bg-blue-600 hover:bg-blue-700 shadow-md">
+                        <i class="fas fa-calculator mr-2"></i>Asignar Costo por Porcentaje
                     </button>
                 </div>
             </div>
 
             <!-- Tarjeta Luz -->
             <div class="card p-6 border-t-4 border-yellow-500">
-                <h3 class="font-bold text-lg mb-4 text-yellow-700"><i class="fas fa-bolt mr-2"></i>Registrar Consumo Eléctrico</h3>
+                <h3 class="font-bold text-lg mb-4 text-yellow-700 flex items-center">
+                    <i class="fas fa-bolt mr-2"></i> Registrar Consumo Eléctrico
+                </h3>
+                <p class="text-sm text-gray-500 mb-4">El sistema autocompleta la lectura anterior si existe. Solo ingrese la lectura actual.</p>
                 <div class="space-y-3">
-                    <label class="block text-sm font-medium text-gray-600">Seleccionar Local</label>
-                    <select id="luz_local_select" class="input-field bg-white mb-2"></select>
-                    
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">Lectura Anterior (kWh)</label>
-                            <input type="number" id="luz_inicio" class="input-field bg-gray-50" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">Lectura Actual (kWh)</label>
-                            <input type="number" id="luz_final" class="input-field" placeholder="Ingrese lectura">
-                        </div>
-                    </div>
-                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mt-2">Valor del kWh ($)</label>
-                        <input type="number" id="luz_valor_kwh" class="input-field" placeholder="Ej: 250">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Seleccionar Local</label>
+                        <select id="luz_local_select" class="input-field bg-white"></select>
                     </div>
-                    
-                    <button onclick="registrarLuz()" class="btn-primary w-full bg-yellow-600 hover:bg-yellow-700 mt-2 text-white">
-                        <i class="fas fa-calculator mr-2"></i>Calcular y Guardar (+19% IVA)
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Lectura Anterior</label>
+                            <input type="number" id="luz_inicio" class="input-field" placeholder="Auto">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Lectura Actual (Final)</label>
+                            <input type="number" id="luz_final" class="input-field" placeholder="Obligatorio">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Valor por kWh ($)</label>
+                        <input type="number" id="luz_valor_kwh" class="input-field" placeholder="Ej: 250" value="250">
+                    </div>
+                    <button onclick="registrarLuz()" class="btn-primary w-full bg-yellow-600 hover:bg-yellow-700 shadow-md text-white">
+                        <i class="fas fa-save mr-2"></i>Calcular y Guardar (+19% IVA)
                     </button>
                 </div>
             </div>
@@ -248,60 +207,108 @@
                     <thead>
                         <tr>
                             <th>Fecha</th>
-                            <th>Mes</th>
-                            <th>Local / Tipo</th>
+                            <th>Local</th>
+                            <th>Tipo</th>
                             <th>Detalle</th>
                             <th class="text-right">Costo Final</th>
                             <th class="text-right">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="body_consumos"></tbody>
+                    <tbody id="body_consumos">
+                        <!-- JS -->
+                    </tbody>
                 </table>
-                <div id="msg_sin_consumos" class="empty-state">Sin registros recientes.</div>
+                <div id="msg_sin_consumos" class="empty-state">No hay consumos registrados.</div>
             </div>
         </div>
     </div>
 
-    <!-- SECCIÓN 4: COBRANZA MENSUAL -->
+    <!-- SECCIÓN 3: GASTOS FIJOS -->
+    <div id="sec-gastos-config" class="section-content hidden-section animate-fade-in">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Formulario Gasto Fijo -->
+            <div class="card p-6 h-fit">
+                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2">Configurar Gasto Fijo</h3>
+                <input type="hidden" id="gasto_id_edit">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Concepto</label>
+                        <input type="text" id="gasto_nombre" placeholder="Ej: Conserje, Ascensor" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Tipo de Valor</label>
+                        <select id="gasto_tipo" class="input-field bg-white">
+                            <option value="UF">Unidades de Fomento (UF)</option>
+                            <option value="CLP">Pesos Chilenos (CLP)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Monto Base</label>
+                        <input type="number" id="gasto_valor" placeholder="Valor estimado" class="input-field" step="0.01">
+                        <p class="text-xs text-gray-500 mt-1">Puede editar este valor mensualmente al liquidar si es variable.</p>
+                    </div>
+                    <button onclick="guardarGastoFijo()" class="btn-primary w-full mt-2 shadow-md">
+                        <i class="fas fa-save mr-2"></i>Guardar Gasto
+                    </button>
+                    <button onclick="cancelarEdicionGasto()" class="w-full text-gray-500 text-sm hover:underline hidden" id="btn_cancelar_gasto">Cancelar Edición</button>
+                </div>
+            </div>
+
+            <!-- Lista Gastos Fijos -->
+            <div class="lg:col-span-2 card p-6">
+                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2">Gastos Configurados</h3>
+                <p class="text-sm text-gray-500 mb-4">Estos gastos se prorratearán automáticamente según los m² de cada local.</p>
+                <div class="overflow-x-auto">
+                    <table id="tabla_gastos_fijos">
+                        <thead>
+                            <tr>
+                                <th>Concepto</th>
+                                <th class="text-center">Tipo</th>
+                                <th class="text-right">Valor Original</th>
+                                <th class="text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body_gastos_fijos">
+                            <!-- JS -->
+                        </tbody>
+                    </table>
+                    <div id="msg_sin_gastos" class="empty-state">
+                        <i class="fas fa-list-ul text-4xl mb-2"></i>
+                        <p>No hay gastos fijos configurados.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 4: COBRANZA GENERAL -->
     <div id="sec-cobranza" class="section-content hidden-section animate-fade-in">
         <div class="card p-8">
             <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Liquidación y Cobranza</h2>
-                <p class="text-gray-500">Seleccione el mes, ajuste valores variables si es necesario y genere el estado de cuenta.</p>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Liquidación y Cobranza Mensual</h2>
+                <p class="text-gray-500">Calcule todos los costos (Arriendo, GC, Agua, Luz) y gestione los pagos.</p>
             </div>
 
-            <div class="flex flex-col md:flex-row justify-center items-end gap-4 mb-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <div class="w-full md:w-auto">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Mes a Liquidar</label>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Seleccionar Mes</label>
                     <input type="month" id="mes_liquidacion" class="input-field w-48 font-bold text-gray-700">
                 </div>
-                
-                <button onclick="prepararLiquidacion()" class="btn-primary text-lg px-8 py-3 shadow-lg bg-purple-600 hover:bg-purple-700">
-                    <i class="fas fa-calculator mr-2"></i>Cargar Datos del Mes
+                <button onclick="generarLiquidacion()" class="btn-primary text-lg px-8 shadow-lg mt-4 md:mt-0">
+                    <i class="fas fa-calculator mr-2"></i>Calcular Todo
                 </button>
             </div>
-
-            <!-- Panel de Ajuste de Variables (Oculto hasta cargar) -->
-            <div id="panel_variables" class="hidden mb-8 bg-orange-50 p-6 rounded-lg border border-orange-200">
-                <h3 class="font-bold text-orange-800 mb-4"><i class="fas fa-edit mr-2"></i>Ajustar Gastos Variables para este Mes</h3>
-                <p class="text-sm text-orange-700 mb-4">Edita aquí los valores específicos de este mes para los gastos que varían. Si dejaste el valor base en 0, ingrésalo aquí.</p>
-                <div id="contenedor_variables" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Se llenan dinámicamente -->
-                </div>
-                <button onclick="generarLiquidacionFinal()" class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded shadow transition">
-                    <i class="fas fa-check-circle mr-2"></i>Confirmar y Calcular Totales
-                </button>
-            </div>
-
-            <!-- Resultados Finales -->
+            
+            <!-- Resultados -->
             <div id="resultado_cobranza" class="hidden animate-fade-in-up">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-6 bg-blue-600 text-white p-4 rounded-lg shadow-md">
                     <h3 class="text-xl font-bold"><i class="fas fa-chart-pie mr-2"></i>Estado de Cuenta Detallado</h3>
                     <button onclick="descargarPDF()" class="mt-2 md:mt-0 bg-white text-blue-600 hover:bg-gray-100 px-4 py-2 rounded font-bold shadow transition">
-                        <i class="fas fa-file-pdf mr-2"></i>Descargar PDF
+                        <i class="fas fa-file-pdf mr-2"></i>Descargar PDF Detallado
                     </button>
                 </div>
                 
+                <!-- Tabla Final -->
                 <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
                     <table class="w-full bg-white" id="tabla_resultados">
                         <thead class="bg-gray-800 text-white">
@@ -313,10 +320,12 @@
                                 <th class="p-3 text-right">Luz</th>
                                 <th class="p-3 text-right bg-gray-700">TOTAL</th>
                                 <th class="p-3 text-center">Estado</th>
-                                <th class="p-3 text-center">Gestionar</th>
+                                <th class="p-3 text-center">Acción</th>
                             </tr>
                         </thead>
-                        <tbody id="body_cobranza" class="divide-y divide-gray-200"></tbody>
+                        <tbody id="body_cobranza" class="divide-y divide-gray-200">
+                            <!-- Filas generadas por JS -->
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -326,30 +335,29 @@
 
 <!-- MODAL DE PAGO -->
 <div id="modal_pago" class="modal">
-    <div class="modal-content shadow-2xl">
+    <div class="modal-content">
         <h3 class="text-xl font-bold mb-4 text-gray-800" id="modal_titulo">Gestionar Pago</h3>
         <input type="hidden" id="pago_index">
         <div class="space-y-4">
             <div>
                 <label class="block text-sm font-medium text-gray-600">Estado del Pago</label>
-                <select id="pago_estado" class="input-field" onchange="toggleCamposPago()">
+                <select id="pago_estado" class="input-field bg-white" onchange="toggleCamposPago()">
                     <option value="pendiente">Pendiente</option>
                     <option value="abonado">Abonado (Parcial)</option>
                     <option value="pagado">Pagado (Total)</option>
                 </select>
             </div>
-            <div id="div_monto_abono" class="hidden bg-yellow-50 p-3 rounded border border-yellow-200">
-                <label class="block text-sm font-medium text-yellow-800">Monto Abonado ($)</label>
+            <div id="div_monto_abono" class="hidden">
+                <label class="block text-sm font-medium text-gray-600">Monto Abonado ($)</label>
                 <input type="number" id="pago_monto" class="input-field">
-                <p class="text-xs text-yellow-600 mt-1">El saldo restante seguirá apareciendo como pendiente.</p>
             </div>
-            <div id="div_fecha_pago" class="hidden bg-green-50 p-3 rounded border border-green-200">
-                <label class="block text-sm font-medium text-green-800">Fecha de Pago / Abono</label>
+            <div id="div_fecha_pago" class="hidden">
+                <label class="block text-sm font-medium text-gray-600">Fecha de Registro</label>
                 <input type="date" id="pago_fecha" class="input-field">
             </div>
             <div class="flex gap-2 mt-6">
-                <button onclick="guardarEstadoPago()" class="btn-primary flex-1 shadow">Guardar Cambios</button>
-                <button onclick="document.getElementById('modal_pago').style.display='none'" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 font-medium">Cancelar</button>
+                <button onclick="guardarEstadoPago()" class="btn-primary flex-1 shadow-md">Guardar Cambios</button>
+                <button onclick="document.getElementById('modal_pago').style.display='none'" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 font-medium">Cancelar</button>
             </div>
         </div>
     </div>
@@ -361,28 +369,27 @@
     let gastosFijos = JSON.parse(localStorage.getItem('gb_gastos_fijos')) || [];
     let consumos = JSON.parse(localStorage.getItem('gb_consumos')) || []; 
     let liquidacionActual = null;
-    let valoresVariablesTemp = {}; // Para guardar ediciones temporales del mes
 
     // Inicialización
     document.addEventListener('DOMContentLoaded', () => {
         renderLocales();
         renderGastosFijos();
         renderConsumos();
-        fetchUF();
-        document.getElementById('mes_liquidacion').value = new Date().toISOString().slice(0, 7);
+        fetchUF(); 
+        const date = new Date();
+        const monthStr = date.toISOString().slice(0, 7);
+        document.getElementById('mes_liquidacion').value = monthStr;
     });
 
     // --- FUNCIONES DE UI ---
     function switchTab(tabId) {
         document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden-section'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
         document.getElementById('sec-' + tabId).classList.remove('hidden-section');
         document.getElementById('tab-' + tabId).classList.add('active');
+        
         if(tabId === 'consumos') llenarSelectLocales();
-        if(tabId === 'cobranza') {
-            document.getElementById('panel_variables').classList.add('hidden');
-            document.getElementById('resultado_cobranza').classList.add('hidden');
-        }
     }
 
     async function fetchUF() {
@@ -391,19 +398,22 @@
         btn.classList.add('animate-spin');
         try {
             const res = await fetch('https://mindicador.cl/api/uf');
-            if (!res.ok) throw new Error('Error red');
+            if (!res.ok) throw new Error('Error en la red');
             const data = await res.json();
-            inputUF.value = data.serie[0].valor.toFixed(2);
+            const valor = data.serie[0].valor;
+            inputUF.value = valor.toFixed(2);
         } catch (e) {
-            console.error(e);
+            console.error("Error fetching UF", e);
             inputUF.value = "36000"; 
-            alert("No se pudo obtener la UF automática. Se usó un valor estimado.");
+            alert("No se pudo conectar con la API. Se usó un valor estimado.");
         } finally {
             btn.classList.remove('animate-spin');
         }
     }
 
-    function getUF() { return parseFloat(document.getElementById('valor_uf').value) || 36000; }
+    function getUF() {
+        return parseFloat(document.getElementById('valor_uf').value) || 0;
+    }
 
     // --- LÓGICA DE LOCALES ---
     function guardarLocal() {
@@ -413,19 +423,22 @@
         const ufBase = parseFloat(document.getElementById('local_uf_base').value);
         const porcAgua = parseFloat(document.getElementById('local_porcentaje_agua').value) || 0;
 
-        if (!nombre || !metros || !ufBase) { alert("Complete nombre, metros y arriendo."); return; }
+        if (!nombre || !metros || !ufBase) {
+            alert("Por favor completa los campos obligatorios (Nombre, Metros, Arriendo).");
+            return;
+        }
 
         if (idEdit) {
             const idx = locales.findIndex(l => l.id == idEdit);
             if (idx !== -1) {
                 locales[idx] = { ...locales[idx], nombre, metros, ufBase, porcAgua };
                 localStorage.setItem('gb_locales', JSON.stringify(locales));
-                alert("✅ Local actualizado");
+                alert("✅ Local actualizado correctamente");
             }
         } else {
             locales.push({ id: Date.now(), nombre, metros, ufBase, porcAgua });
             localStorage.setItem('gb_locales', JSON.stringify(locales));
-            alert("✅ Local creado");
+            alert("✅ Local creado correctamente");
         }
         cancelarEdicion();
         renderLocales();
@@ -439,7 +452,7 @@
         document.getElementById('local_metros').value = loc.metros;
         document.getElementById('local_uf_base').value = loc.ufBase;
         document.getElementById('local_porcentaje_agua').value = loc.porcAgua || 0;
-        document.getElementById('btn_cancelar_local').classList.remove('hidden');
+        document.getElementById('btn_cancelar').classList.remove('hidden');
         window.scrollTo(0,0);
     }
 
@@ -449,11 +462,11 @@
         document.getElementById('local_metros').value = '';
         document.getElementById('local_uf_base').value = '';
         document.getElementById('local_porcentaje_agua').value = '';
-        document.getElementById('btn_cancelar_local').classList.add('hidden');
+        document.getElementById('btn_cancelar').classList.add('hidden');
     }
 
     function eliminarLocal(id) {
-        if(confirm('¿Eliminar local?')) {
+        if(confirm('¿Estás seguro de eliminar este local? Esta acción no se puede deshacer.')) {
             locales = locales.filter(l => l.id != id);
             localStorage.setItem('gb_locales', JSON.stringify(locales));
             renderLocales();
@@ -462,10 +475,15 @@
 
     function renderLocales() {
         const tbody = document.getElementById('body_locales');
+        const msg = document.getElementById('msg_sin_locales');
         tbody.innerHTML = '';
-        if (locales.length === 0) { document.getElementById('msg_sin_locales').style.display = 'block'; return; }
-        document.getElementById('msg_sin_locales').style.display = 'none';
-        
+
+        if (locales.length === 0) {
+            msg.style.display = 'block';
+            return;
+        }
+        msg.style.display = 'none';
+
         locales.forEach(loc => {
             const tr = document.createElement('tr');
             tr.className = "hover:bg-blue-50 transition";
@@ -475,8 +493,12 @@
                 <td class="text-center"><span class="badge badge-uf">${loc.porcAgua || 0}%</span></td>
                 <td class="text-center"><span class="badge badge-clp">${loc.ufBase} UF</span></td>
                 <td class="text-right space-x-2">
-                    <button onclick="editarLocal(${loc.id})" class="text-blue-600 hover:text-blue-800 bg-blue-100 p-2 rounded transition" title="Editar"><i class="fas fa-edit"></i></button>
-                    <button onclick="eliminarLocal(${loc.id})" class="text-red-600 hover:text-red-800 bg-red-100 p-2 rounded transition" title="Eliminar"><i class="fas fa-trash"></i></button>
+                    <button onclick="editarLocal(${loc.id})" class="text-yellow-500 hover:text-yellow-700 hover:bg-yellow-50 p-2 rounded transition" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="eliminarLocal(${loc.id})" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded transition" title="Eliminar">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -484,13 +506,16 @@
     }
 
     // --- LÓGICA DE GASTOS FIJOS ---
-    function guardarGasto() {
+    function guardarGastoFijo() {
         const idEdit = document.getElementById('gasto_id_edit').value;
         const nombre = document.getElementById('gasto_nombre').value.trim();
         const tipo = document.getElementById('gasto_tipo').value;
-        const valor = parseFloat(document.getElementById('gasto_valor').value) || 0;
+        const valor = parseFloat(document.getElementById('gasto_valor').value);
 
-        if (!nombre) { alert("Ingrese un concepto."); return; }
+        if (!nombre || !valor) {
+            alert("Completa el concepto y el valor correctamente.");
+            return;
+        }
 
         if (idEdit) {
             const idx = gastosFijos.findIndex(g => g.id == idEdit);
@@ -502,21 +527,20 @@
         } else {
             gastosFijos.push({ id: Date.now(), nombre, tipo, valor });
             localStorage.setItem('gb_gastos_fijos', JSON.stringify(gastosFijos));
-            alert("✅ Gasto creado");
+            alert("✅ Gasto fijo configurado");
         }
         cancelarEdicionGasto();
         renderGastosFijos();
     }
 
     function editarGasto(id) {
-        const g = gastosFijos.find(x => x.id == id);
-        if (!g) return;
-        document.getElementById('gasto_id_edit').value = g.id;
-        document.getElementById('gasto_nombre').value = g.nombre;
-        document.getElementById('gasto_tipo').value = g.tipo;
-        document.getElementById('gasto_valor').value = g.valor;
+        const gasto = gastosFijos.find(g => g.id == id);
+        if (!gasto) return;
+        document.getElementById('gasto_id_edit').value = gasto.id;
+        document.getElementById('gasto_nombre').value = gasto.nombre;
+        document.getElementById('gasto_tipo').value = gasto.tipo;
+        document.getElementById('gasto_valor').value = gasto.valor;
         document.getElementById('btn_cancelar_gasto').classList.remove('hidden');
-        window.scrollTo(0,0);
     }
 
     function cancelarEdicionGasto() {
@@ -527,7 +551,7 @@
     }
 
     function eliminarGasto(id) {
-        if(confirm('¿Eliminar gasto?')) {
+        if(confirm('¿Eliminar este gasto fijo?')) {
             gastosFijos = gastosFijos.filter(g => g.id != id);
             localStorage.setItem('gb_gastos_fijos', JSON.stringify(gastosFijos));
             renderGastosFijos();
@@ -536,21 +560,31 @@
 
     function renderGastosFijos() {
         const tbody = document.getElementById('body_gastos_fijos');
+        const msg = document.getElementById('msg_sin_gastos');
         tbody.innerHTML = '';
-        if (gastosFijos.length === 0) { document.getElementById('msg_sin_gastos').style.display = 'block'; return; }
-        document.getElementById('msg_sin_gastos').style.display = 'none';
 
-        gastosFijos.forEach(g => {
+        if (gastosFijos.length === 0) {
+            msg.style.display = 'block';
+            return;
+        }
+        msg.style.display = 'none';
+
+        gastosFijos.forEach((gasto) => {
             const tr = document.createElement('tr');
             tr.className = "hover:bg-green-50 transition";
-            const badgeClass = g.tipo === 'UF' ? 'badge-uf' : 'badge-clp';
+            const badgeClass = gasto.tipo === 'UF' ? 'badge-uf' : 'badge-clp';
+            
             tr.innerHTML = `
-                <td class="font-medium text-gray-800">${g.nombre}</td>
-                <td class="text-center"><span class="badge ${badgeClass}">${g.tipo}</span></td>
-                <td class="text-right font-mono text-gray-600">$${g.valor.toLocaleString('es-CL')}</td>
+                <td class="font-medium text-gray-800">${gasto.nombre}</td>
+                <td class="text-center"><span class="badge ${badgeClass}">${gasto.tipo}</span></td>
+                <td class="text-right font-mono text-gray-600">$${gasto.valor.toLocaleString('es-CL')} <small class="text-gray-400">${gasto.tipo}</small></td>
                 <td class="text-right space-x-2">
-                    <button onclick="editarGasto(${g.id})" class="text-blue-600 hover:text-blue-800 bg-blue-100 p-2 rounded transition"><i class="fas fa-edit"></i></button>
-                    <button onclick="eliminarGasto(${g.id})" class="text-red-600 hover:text-red-800 bg-red-100 p-2 rounded transition"><i class="fas fa-trash"></i></button>
+                    <button onclick="editarGasto(${gasto.id})" class="text-yellow-500 hover:text-yellow-700 hover:bg-yellow-50 p-2 rounded transition" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="eliminarGasto(${gasto.id})" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded transition" title="Eliminar">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -563,38 +597,46 @@
         sel.innerHTML = '<option value="">Seleccione Local...</option>';
         locales.forEach(l => sel.innerHTML += `<option value="${l.id}">${l.nombre}</option>`);
         
-        // Evento para autocompletar lectura inicial
+        // Evento para autocompletar lectura anterior
         sel.onchange = function() {
             const localId = parseInt(this.value);
-            if(!localId) { document.getElementById('luz_inicio').value = ''; return; }
+            if(!localId) {
+                document.getElementById('luz_inicio').value = '';
+                document.getElementById('luz_inicio').disabled = false;
+                return;
+            }
             
-            // Buscar último consumo de luz de este local
+            // Buscar el último consumo de luz de este local
             const ultimos = consumos.filter(c => c.tipo === 'LUZ' && c.localId === localId);
             if (ultimos.length > 0) {
-                // Ordenar por fecha/id descendente y tomar el último
+                // Ordenar por fecha o ID descendente para obtener el más reciente
                 const ultimo = ultimos.sort((a,b) => b.id - a.id)[0];
-                // Extraer la lectura final del detalle o asumirla si guardamos el dato crudo
-                // Para simplificar, guardaremos la lectura final cruda en el objeto consumo si es posible, 
-                // pero como solo guardamos costo, necesitamos inferir o guardar mejor los datos.
-                // MEJORA: Guardemos la lectura final en el objeto consumo para usarla después.
-                // Como ya existen datos viejos, usaremos un fallback.
+                // Extraer el valor final del detalle o usar un campo dedicado si existiera
+                // Como guardamos "detalle" como string "X kWh", necesitamos parsear o guardar mejor.
+                // Para simplificar, asumiremos que el usuario puede editar si es el primer vez, 
+                // pero si hay historial, sugerimos el valor.
                 
-                // NOTA: Para que esto funcione perfecto desde ahora, modificamos registrarLuz para guardar 'lecturaFinal'.
-                // Si el registro viejo no lo tiene, pediremos manual o usaremos 0.
-                const lectFinal = ultimo.lecturaFinal || 0; 
-                document.getElementById('luz_inicio').value = lectFinal;
+                // Mejor enfoque: Guardar el 'final' explícitamente en el objeto consumo si es posible.
+                // En la función registrarLuz guardamos 'detalle'. Vamos a asumir que el usuario sabe su lectura anterior
+                // O mejor: Leemos el último registro.
+                
+                const lecturaAnterior = ultimo.lecturaFinal || 0; // Necesitamos guardar lecturaFinal en el objeto
+                document.getElementById('luz_inicio').value = lecturaAnterior;
+                document.getElementById('luz_inicio').disabled = true; // Bloquear para evitar errores
             } else {
-                document.getElementById('luz_inicio').value = 0;
+                // Primer registro: dejar libre
+                document.getElementById('luz_inicio').value = '';
+                document.getElementById('luz_inicio').disabled = false;
             }
         };
     }
 
     function registrarAgua() {
         const total = parseFloat(document.getElementById('agua_total_factura').value);
-        if (!total) return alert("Ingrese monto total de agua");
+        if (!total) return alert("Ingrese el monto total de la factura de agua.");
         
         const mesActual = new Date().toISOString().slice(0, 7);
-        // Eliminar registro anterior de agua del mismo mes si existe
+        // Eliminar registros de agua anteriores del mismo mes para no duplicar
         consumos = consumos.filter(c => !(c.tipo === 'AGUA_GLOBAL' && c.mes === mesActual));
         
         consumos.push({
@@ -606,18 +648,24 @@
         });
         localStorage.setItem('gb_consumos', JSON.stringify(consumos));
         document.getElementById('agua_total_factura').value = '';
-        alert("✅ Factura de agua registrada para el mes actual.");
+        alert("✅ Costo de agua registrado para el mes actual.");
         renderConsumos();
     }
 
     function registrarLuz() {
         const localId = parseInt(document.getElementById('luz_local_select').value);
-        const inicio = parseFloat(document.getElementById('luz_inicio').value) || 0;
-        const final = parseFloat(document.getElementById('luz_final').value);
+        const inicioVal = document.getElementById('luz_inicio').value;
+        const finalVal = document.getElementById('luz_final').value;
         const valorKwh = parseFloat(document.getElementById('luz_valor_kwh').value);
 
-        if (!localId || !final || !valorKwh) return alert("Complete todos los datos de luz");
-        if (final <= inicio) return alert("La lectura final debe ser mayor a la inicial");
+        if (!localId) return alert("Seleccione un local.");
+        if (!inicioVal || !finalVal) return alert("Complete las lecturas inicial y final.");
+        if (!valorKwh) return alert("Ingrese el valor del kWh.");
+
+        const inicio = parseFloat(inicioVal);
+        const final = parseFloat(finalVal);
+
+        if (final <= inicio) return alert("La lectura final debe ser mayor a la inicial.");
 
         const consumoKwh = final - inicio;
         const costoNeto = consumoKwh * valorKwh;
@@ -630,115 +678,105 @@
             localId: localId,
             localNombre: local ? local.nombre : 'Desconocido',
             tipo: 'LUZ',
+            lecturaFinal: final, // Guardamos para la próxima
             detalle: `${consumoKwh} kWh`,
-            lecturaFinal: final, // GUARDAMOS LA LECTURA FINAL PARA EL SIGUIENTE MES
             valor: costoConIva,
             mes: new Date().toISOString().slice(0, 7),
             fecha: new Date().toLocaleDateString()
         });
         localStorage.setItem('gb_consumos', JSON.stringify(consumos));
-        alert(`✅ Luz registrada: $${costoConIva} (Incluye IVA)\nPróxima lectura inicial será: ${final}`);
+        alert(`✅ Luz registrada: ${consumoKwh} kWh -> $${costoConIva} (incluye IVA)`);
         
-        // Limpiar campos
+        // Limpiar solo lectura final para下一个
         document.getElementById('luz_final').value = '';
         renderConsumos();
     }
 
-    function renderConsumos() {
-        const tbody = document.getElementById('body_consumos');
-        tbody.innerHTML = '';
-        const recientes = consumos.slice().reverse().slice(0, 10);
-        
-        if(recientes.length === 0) { document.getElementById('msg_sin_consumos').style.display = 'block'; return; }
-        document.getElementById('msg_sin_consumos').style.display = 'none';
+    function editarConsumo(id) {
+        const cons = consumos.find(c => c.id === id);
+        if(!cons) return;
 
-        recientes.forEach(c => {
-            let detalle = c.detalle || '-';
-            let nombre = c.localNombre || 'Global';
-            if(c.tipo === 'AGUA_GLOBAL') { nombre = 'Todos'; detalle = "Factura Global"; }
-            
-            tbody.innerHTML += `
-                <tr class="hover:bg-gray-50">
-                    <td class="text-sm text-gray-500">${c.fecha}</td>
-                    <td class="text-sm font-bold text-gray-700">${c.mes}</td>
-                    <td class="font-medium">${nombre}</td>
-                    <td class="text-sm text-gray-600">${detalle}</td>
-                    <td class="text-right font-bold text-gray-800">$${c.valor.toLocaleString()}</td>
-                    <td class="text-right">
-                        <button onclick="eliminarConsumo(${c.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
+        if(cons.tipo === 'AGUA_GLOBAL') {
+            const nuevoValor = prompt("Editar monto total de agua ($):", cons.valor);
+            if(nuevoValor !== null && !isNaN(nuevoValor)) {
+                cons.valor = Math.round(parseFloat(nuevoValor));
+                localStorage.setItem('gb_consumos', JSON.stringify(consumos));
+                renderConsumos();
+                alert("✅ Actualizado");
+            }
+        } else if (cons.tipo === 'LUZ') {
+            // Para luz es más complejo editar porque afecta el cálculo.
+            // Permitiremos editar el valor final directamente por simplicidad o borrar y recrear.
+            const nuevoValor = prompt("Editar costo final (con IVA) de este consumo ($):", cons.valor);
+            if(nuevoValor !== null && !isNaN(nuevoValor)) {
+                cons.valor = Math.round(parseFloat(nuevoValor));
+                localStorage.setItem('gb_consumos', JSON.stringify(consumos));
+                renderConsumos();
+                alert("✅ Costo actualizado manualmente.");
+            }
+        }
     }
 
     function eliminarConsumo(id) {
-        if(confirm('¿Borrar este registro?')) {
+        if(confirm('¿Borrar este registro de consumo?')) {
             consumos = consumos.filter(c => c.id !== id);
             localStorage.setItem('gb_consumos', JSON.stringify(consumos));
             renderConsumos();
         }
     }
 
-    // --- LÓGICA DE COBRANZA Y LIQUIDACIÓN ---
-    
-    // Paso 1: Cargar datos y mostrar panel de variables
-    function prepararLiquidacion() {
-        if (locales.length === 0) return alert("Sin locales registrados");
+    function renderConsumos() {
+        const tbody = document.getElementById('body_consumos');
+        const msg = document.getElementById('msg_sin_consumos');
+        tbody.innerHTML = '';
         
-        const mesSel = document.getElementById('mes_liquidacion').value;
-        const contenedor = document.getElementById('contenedor_variables');
-        contenedor.innerHTML = '';
+        const recientes = consumos.slice().reverse().slice(0, 20); // Últimos 20
         
-        // Filtrar gastos que podrían ser variables (o simplemente mostramos todos para editar si se quiere)
-        // Estrategia: Mostramos TODOS los gastos fijos para permitir edición mensual.
-        // El usuario puede cambiar el valor si es variable.
-        
-        let hayGastos = false;
-        gastosFijos.forEach(g => {
-            hayGastos = true;
-            const div = document.createElement('div');
-            div.className = "bg-white p-3 rounded border border-gray-200 shadow-sm";
-            div.innerHTML = `
-                <label class="block text-xs font-bold text-gray-500 uppercase">${g.nombre} (${g.tipo})</label>
-                <input type="number" class="input-field text-sm font-bold text-blue-700 mt-1" 
-                       value="${g.valor}" 
-                       onchange="valoresVariablesTemp[${g.id}] = parseFloat(this.value)">
-                <p class="text-xs text-gray-400 mt-1">Valor base: $${g.valor.toLocaleString()}</p>
-            `;
-            contenedor.appendChild(div);
-            // Inicializar temp
-            valoresVariablesTemp[g.id] = g.valor;
-        });
-
-        if(!hayGastos) {
-            contenedor.innerHTML = '<p class="text-gray-500 col-span-3">No hay gastos configurados. Puede crearlos en la pestaña "Gastos Fijos".</p>';
+        if (recientes.length === 0) {
+            msg.style.display = 'block';
+            return;
         }
+        msg.style.display = 'none';
 
-        document.getElementById('panel_variables').classList.remove('hidden');
-        document.getElementById('resultado_cobranza').classList.add('hidden');
-        liquidacionActual = null; // Resetear previo
+        recientes.forEach(c => {
+            let detalle = c.detalle || '-';
+            let icono = c.tipo.includes('AGUA') ? 'fa-tint text-blue-500' : 'fa-bolt text-yellow-500';
+            
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-gray-50";
+            tr.innerHTML = `
+                <td>${c.fecha}</td>
+                <td class="font-medium">${c.localNombre || 'General'}</td>
+                <td><span class="badge ${c.tipo.includes('AGUA')?'badge-uf':'badge-clp'}"><i class="fas ${icono} mr-1"></i>${c.tipo}</span></td>
+                <td class="text-sm text-gray-600">${detalle}</td>
+                <td class="text-right font-bold text-gray-800">$${c.valor.toLocaleString()}</td>
+                <td class="text-right space-x-2">
+                    <button onclick="editarConsumo(${c.id})" class="text-yellow-500 hover:text-yellow-700" title="Editar Valor"><i class="fas fa-edit"></i></button>
+                    <button onclick="eliminarConsumo(${c.id})" class="text-red-500 hover:text-red-700" title="Eliminar"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
-    // Paso 2: Calcular con los valores editados
-    function generarLiquidacionFinal() {
-        const uf = getUF();
+    // --- LIQUIDACION Y COBRANZA ---
+    function generarLiquidacion() {
+        if (locales.length === 0) return alert("⚠️ Debes registrar al menos un local.");
+        
+        const uf = parseFloat(document.getElementById('valor_uf').value) || 36000;
         const mesSel = document.getElementById('mes_liquidacion').value;
 
-        // 1. Calcular Gastos Comunes usando VALORES EDITADOS (variables)
+        // 1. Calcular Gastos Comunes
         let totalGC_UF = 0;
         gastosFijos.forEach(g => {
-            // Usar el valor temporal si fue editado, sino el base
-            const valorUsar = valoresVariablesTemp[g.id] !== undefined ? valoresVariablesTemp[g.id] : g.valor;
-            
-            if (g.tipo === 'UF') totalGC_UF += valorUsar;
-            else totalGC_UF += (valorUsar / uf);
+            if (g.tipo === 'UF') totalGC_UF += g.valor;
+            else totalGC_UF += (g.valor / uf);
         });
-
+        
         const totalMetros = locales.reduce((sum, l) => sum + l.metros, 0);
         const factorGC = totalMetros > 0 ? totalGC_UF / totalMetros : 0;
 
-        // 2. Obtener Agua del Mes
+        // 2. Obtener Agua del Mes Selecionado
         const regAgua = consumos.find(c => c.tipo === 'AGUA_GLOBAL' && c.mes === mesSel);
         const totalAgua = regAgua ? regAgua.valor : 0;
 
@@ -757,15 +795,29 @@
             const porcAgua = loc.porcAgua || 0;
             const aguaLocal = Math.round(totalAgua * (porcAgua / 100));
             
-            // Luz (Ya viene redondeada del registro)
+            // Luz (Buscado y Redondeado)
             const luzReg = consumosLuz.find(c => c.localId === loc.id);
             const luzLocal = luzReg ? luzReg.valor : 0;
 
             const totalPagar = arriendoTotal + gcLocal + aguaLocal + luzLocal;
 
-            // Buscar estado previo si existe para este mes (simulado en memoria para esta sesión)
-            // En una app real se guardaría en DB. Aquí usamos liquidacionActual si recargamos sin borrar
-            const prev = liquidacionActual?.detalles.find(d => d.localId === loc.id);
+            // Buscar estado de pago previo si existe para este mes/local
+            // Nota: En una app real, el estado de pago debería guardarse por mes. 
+            // Aquí lo simulamos buscando en una estructura hipotética o reiniciando si cambia el mes.
+            // Para este ejemplo, si regeneras la liquidación del mismo mes, mantenemos el estado.
+            
+            let estadoPrevio = 'pendiente';
+            let montoAbonadoPrevio = 0;
+            let fechaPagoPrevio = '';
+
+            if (liquidacionActual && liquidacionActual.mes === mesSel) {
+                const prev = liquidacionActual.detalles.find(d => d.localId === loc.id);
+                if (prev) {
+                    estadoPrevio = prev.estado;
+                    montoAbonadoPrevio = prev.montoAbonado;
+                    fechaPagoPrevio = prev.fechaPago;
+                }
+            }
 
             filas.push({
                 localId: loc.id,
@@ -775,15 +827,17 @@
                 agua: aguaLocal,
                 luz: luzLocal,
                 total: totalPagar,
-                estado: prev ? prev.estado : 'pendiente',
-                montoAbonado: prev ? prev.montoAbonado : 0,
-                fechaPago: prev ? prev.fechaPago : ''
+                estado: estadoPrevio,
+                montoAbonado: montoAbonadoPrevio,
+                fechaPago: fechaPagoPrevio
             });
         });
 
         liquidacionActual = { mes: mesSel, detalles: filas };
         renderCobranza();
         document.getElementById('resultado_cobranza').classList.remove('hidden');
+        
+        // Scroll suave
         document.getElementById('resultado_cobranza').scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -800,22 +854,23 @@
 
             const saldo = fila.estado === 'abonado' ? (fila.total - fila.montoAbonado) : (fila.estado === 'pagado' ? 0 : fila.total);
 
-            tbody.innerHTML += `
-                <tr class="border-b hover:bg-gray-50 transition">
-                    <td class="p-3 font-bold text-gray-800">${fila.nombre}</td>
-                    <td class="p-3 text-right text-gray-600">$${fila.arriendo.toLocaleString()}</td>
-                    <td class="p-3 text-right text-gray-600">$${fila.gc.toLocaleString()}</td>
-                    <td class="p-3 text-right text-blue-600 font-medium">$${fila.agua.toLocaleString()}</td>
-                    <td class="p-3 text-right text-yellow-600 font-medium">$${fila.luz.toLocaleString()}</td>
-                    <td class="p-3 text-right font-black text-lg text-gray-900 bg-gray-50 border-l">$${fila.total.toLocaleString()}</td>
-                    <td class="p-3 text-center"><span class="badge ${claseEstado} font-bold">${textoEstado}</span></td>
-                    <td class="p-3 text-center">
-                        <button onclick="abrirModalPago(${idx})" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 shadow transition font-medium">
-                            <i class="fas fa-hand-holding-usd mr-1"></i> Gestionar
-                        </button>
-                    </td>
-                </tr>
+            const tr = document.createElement('tr');
+            tr.className = "border-b hover:bg-gray-50 transition";
+            tr.innerHTML = `
+                <td class="font-bold p-3 text-gray-800">${fila.nombre}</td>
+                <td class="text-right p-3 text-gray-600">$${fila.arriendo.toLocaleString()}</td>
+                <td class="text-right p-3 text-gray-600">$${fila.gc.toLocaleString()}</td>
+                <td class="text-right p-3 text-gray-600">$${fila.agua.toLocaleString()}</td>
+                <td class="text-right p-3 text-gray-600">$${fila.luz.toLocaleString()}</td>
+                <td class="text-right p-3 font-bold text-lg text-gray-900 bg-gray-50 border-l">$${fila.total.toLocaleString()}</td>
+                <td class="text-center p-3"><span class="badge ${claseEstado} font-bold px-3 py-1">${textoEstado}</span></td>
+                <td class="text-center p-3">
+                    <button onclick="abrirModalPago(${idx})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium shadow transition">
+                        <i class="fas fa-money-bill-wave mr-1"></i> Gestionar
+                    </button>
+                </td>
             `;
+            tbody.appendChild(tr);
         });
     }
 
@@ -838,50 +893,63 @@
     function guardarEstadoPago() {
         const idx = document.getElementById('pago_index').value;
         const fila = liquidacionActual.detalles[idx];
+        
         fila.estado = document.getElementById('pago_estado').value;
         fila.montoAbonado = parseFloat(document.getElementById('pago_monto').value) || 0;
         fila.fechaPago = document.getElementById('pago_fecha').value;
         
         renderCobranza();
         document.getElementById('modal_pago').style.display = 'none';
+        
+        // Feedback visual
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.innerText = "¡Guardado!";
+        setTimeout(() => btn.innerText = originalText, 1500);
     }
 
     function descargarPDF() {
         if (!liquidacionActual) return;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
+
         // Colores
-        const colorPrimario = [37, 99, 235];
+        const colorPrimario = [37, 99, 235]; 
         
         doc.setFontSize(18);
         doc.setTextColor(...colorPrimario);
-        doc.text(`Liquidación de Gastos - Mes ${liquidacionActual.mes}`, 14, 20);
+        doc.text("Liquidación de Gastos Comunes", 14, 20);
         
-        doc.setFontSize(10);
-        doc.setTextColor(50);
-        doc.text(`Fecha Emisión: ${new Date().toLocaleDateString()}`, 14, 30);
-        doc.text(`UF Utilizada: $${getUF().toLocaleString('es-CL')}`, 14, 36);
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Mes: ${liquidacionActual.mes}`, 14, 30);
+        doc.text(`Fecha Emisión: ${new Date().toLocaleDateString()}`, 14, 36);
+        doc.text(`UF Utilizada: $${getUF().toLocaleString('es-CL')}`, 14, 42);
         
-        const rows = liquidacionActual.detalles.map(f => [
+        doc.line(14, 46, 196, 46);
+
+        const tableData = liquidacionActual.detalles.map(f => [
             f.nombre, 
-            f.arriendo, 
-            f.gc, 
-            f.agua, 
-            f.luz, 
-            f.total,
+            f.arriendo.toLocaleString(), 
+            f.gc.toLocaleString(), 
+            f.agua.toLocaleString(), 
+            f.luz.toLocaleString(), 
+            f.total.toLocaleString(),
             f.estado.toUpperCase()
         ]);
-        
+
         doc.autoTable({
-            startY: 45,
-            head: [['Local', 'Arr.', 'G.Com', 'Agua', 'Luz', 'TOTAL', 'Estado']],
-            body: rows,
-            theme: 'grid',
-            headStyles: { fillColor: colorPrimario },
-            columnStyles: { 5: { fontStyle: 'bold', fillColor: [240,240,240] } }
+            startY: 55,
+            head: [['Local', 'Arr.', 'G.Común', 'Agua', 'Luz', 'TOTAL', 'Estado']],
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: colorPrimario, textColor: 255 },
+            columnStyles: {
+                5: { fontStyle: 'bold', fillColor: [240, 240, 240] },
+                6: { cellWidth: 30 }
+            }
         });
-        
+
         doc.save(`Liquidacion_Boulevard_${liquidacionActual.mes}.pdf`);
     }
 </script>
