@@ -50,7 +50,7 @@
         /* Modal */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 50; }
         .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; color: #1f2937; }
+        .modal-large { max-width: 800px; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -295,7 +295,7 @@
                     <label class="block text-sm font-bold text-gray-700 mb-1">Seleccionar Mes</label>
                     <input type="month" id="mes_liquidacion" class="input-field w-48 font-bold text-gray-700">
                 </div>
-                <button onclick="prepararLiquidacion()" class="btn-primary text-lg px-8 shadow-lg mt-4 md:mt-0">
+                <button onclick="iniciarLiquidacion()" class="btn-primary text-lg px-8 shadow-lg mt-4 md:mt-0">
                     <i class="fas fa-calculator mr-2"></i>Calcular Todo
                 </button>
             </div>
@@ -304,9 +304,11 @@
             <div id="resultado_cobranza" class="hidden animate-fade-in-up">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-6 bg-blue-600 text-white p-4 rounded-lg shadow-md">
                     <h3 class="text-xl font-bold"><i class="fas fa-chart-pie mr-2"></i>Estado de Cuenta Detallado</h3>
-                    <button onclick="descargarPDF()" class="mt-2 md:mt-0 bg-white text-blue-600 hover:bg-gray-100 px-4 py-2 rounded font-bold shadow transition">
-                        <i class="fas fa-file-pdf mr-2"></i>Descargar PDF Detallado
-                    </button>
+                    <div class="flex gap-2 mt-2 md:mt-0">
+                         <button onclick="descargarPDFGeneral()" class="bg-white text-blue-600 hover:bg-gray-100 px-4 py-2 rounded font-bold shadow transition">
+                            <i class="fas fa-file-pdf mr-2"></i>PDF General
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Tabla Final -->
@@ -321,7 +323,7 @@
                                 <th class="p-3 text-right">Luz+IVA</th>
                                 <th class="p-3 text-right bg-gray-700">TOTAL</th>
                                 <th class="p-3 text-center">Estado</th>
-                                <th class="p-3 text-center">Acción</th>
+                                <th class="p-3 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="body_cobranza" class="divide-y divide-gray-200">
@@ -330,21 +332,6 @@
                     </table>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL DE GASTOS VARIABLES (PRE-LIQUIDACION) -->
-<div id="modal_gastos_vars" class="modal">
-    <div class="modal-content">
-        <h3 class="text-xl font-bold mb-4 text-gray-800">Ajuste de Gastos Comunes (Mes Selecionado)</h3>
-        <p class="text-sm text-gray-600 mb-4">Revise y edite los valores de los gastos fijos para este mes específico antes de calcular el prorrateo.</p>
-        <div id="lista_gastos_modal" class="space-y-3 mb-6 max-h-60 overflow-y-auto">
-            <!-- Se llena dinámicamente -->
-        </div>
-        <div class="flex gap-2">
-            <button onclick="confirmarLiquidacion()" class="btn-primary flex-1 shadow-md">Confirmar y Calcular</button>
-            <button onclick="document.getElementById('modal_gastos_vars').style.display='none'" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 font-medium">Cancelar</button>
         </div>
     </div>
 </div>
@@ -379,13 +366,48 @@
     </div>
 </div>
 
+<!-- MODAL DE GASTOS VARIABLES (PRE-LIQUIDACION) -->
+<div id="modal_gastos_vars" class="modal">
+    <div class="modal-content modal-large">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">Ajustar Gastos Comunes del Mes</h3>
+        <p class="text-sm text-gray-500 mb-4">Revise y edite los valores de los gastos fijos para este mes antes de calcular el prorrateo.</p>
+        <div id="lista_gastos_editables" class="space-y-3 mb-6 max-h-60 overflow-y-auto border p-3 rounded bg-gray-50">
+            <!-- Se llena dinámicamente -->
+        </div>
+        <div class="flex gap-2 mt-4">
+            <button onclick="confirmarYCalcular()" class="btn-primary flex-1 shadow-md">Confirmar y Calcular Liquidación</button>
+            <button onclick="document.getElementById('modal_gastos_vars').style.display='none'" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 font-medium">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DETALLE GASTOS COMUNES -->
+<div id="modal_detalle_gc" class="modal">
+    <div class="modal-content modal-large">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+            <h3 class="text-xl font-bold text-gray-800" id="gc_modal_titulo">Detalle Gastos Comunes</h3>
+            <button onclick="document.getElementById('modal_detalle_gc').style.display='none'" class="text-gray-500 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        
+        <div id="gc_contenido" class="space-y-4">
+            <!-- Contenido dinámico -->
+        </div>
+
+        <div class="mt-6 pt-4 border-t flex justify-end">
+            <button onclick="descargarDetalleGCLocal()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded font-bold shadow transition">
+                <i class="fas fa-file-pdf mr-2"></i>Descargar PDF
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     // --- ESTADO Y DATOS ---
     let locales = JSON.parse(localStorage.getItem('gb_locales')) || [];
     let gastosFijos = JSON.parse(localStorage.getItem('gb_gastos_fijos')) || [];
     let consumos = JSON.parse(localStorage.getItem('gb_consumos')) || []; 
     let liquidacionActual = null;
-    let gastosTemporales = []; // Para editar valores mensuales
+    let gastosVariablesMes = []; // Para almacenar los valores editados del mes
 
     // Inicialización
     document.addEventListener('DOMContentLoaded', () => {
@@ -396,6 +418,9 @@
         const date = new Date();
         const monthStr = date.toISOString().slice(0, 7);
         document.getElementById('mes_liquidacion').value = monthStr;
+        
+        // Cargar liquidación guardada si existe
+        cargarLiquidacionGuardada();
     });
 
     // --- FUNCIONES DE UI ---
@@ -407,6 +432,7 @@
         document.getElementById('tab-' + tabId).classList.add('active');
         
         if(tabId === 'consumos') llenarSelectLocales();
+        if(tabId === 'cobranza') cargarLiquidacionGuardada();
     }
 
     async function fetchUF() {
@@ -614,7 +640,6 @@
         sel.innerHTML = '<option value="">Seleccione Local...</option>';
         locales.forEach(l => sel.innerHTML += `<option value="${l.id}">${l.nombre}</option>`);
         
-        // Evento para autocompletar lectura anterior
         sel.onchange = function() {
             const localId = parseInt(this.value);
             if(!localId) {
@@ -623,19 +648,15 @@
                 return;
             }
             
-            // Buscar el último consumo de luz de este local
             const consumosLuzLocal = consumos.filter(c => c.tipo === 'LUZ' && c.localId === localId);
             
             if (consumosLuzLocal.length > 0) {
-                // Ordenar por ID descendente para obtener el más reciente
                 const ultimoConsumo = consumosLuzLocal.sort((a, b) => b.id - a.id)[0];
-                // Usar el valor 'lecturaFinal' del último registro como el 'inicio' actual
                 document.getElementById('luz_inicio').value = ultimoConsumo.lecturaFinal;
-                document.getElementById('luz_inicio').disabled = true; // Bloquear para evitar errores
+                document.getElementById('luz_inicio').disabled = true; 
             } else {
-                // PRIMERA VEZ: No hay registros previos, dejar ambos campos libres
                 document.getElementById('luz_inicio').value = '';
-                document.getElementById('luz_inicio').disabled = false; // Dejar editable
+                document.getElementById('luz_inicio').disabled = false; 
             }
         };
     }
@@ -645,13 +666,12 @@
         if (!total) return alert("Ingrese el monto total de la factura de agua.");
         
         const mesActual = new Date().toISOString().slice(0, 7);
-        // Eliminar registros de agua anteriores del mismo mes para no duplicar
         consumos = consumos.filter(c => !(c.tipo === 'AGUA_GLOBAL' && c.mes === mesActual));
         
         consumos.push({
             id: Date.now(),
             tipo: 'AGUA_GLOBAL',
-            valor: Math.round(total), // Redondeado
+            valor: Math.round(total), 
             mes: mesActual,
             fecha: new Date().toLocaleDateString()
         });
@@ -678,7 +698,7 @@
 
         const consumoKwh = final - inicio;
         const costoNeto = consumoKwh * valorKwh;
-        const costoConIva = Math.round(costoNeto * 1.19); // Redondeado entero
+        const costoConIva = Math.round(costoNeto * 1.19); 
 
         const local = locales.find(l => l.id === localId);
         
@@ -687,7 +707,7 @@
             localId: localId,
             localNombre: local ? local.nombre : 'Desconocido',
             tipo: 'LUZ',
-            lecturaFinal: final, // Guardamos para la próxima
+            lecturaFinal: final, 
             detalle: `${consumoKwh} kWh`,
             valor: costoConIva,
             mes: new Date().toISOString().slice(0, 7),
@@ -695,7 +715,6 @@
         });
         localStorage.setItem('gb_consumos', JSON.stringify(consumos));
         alert(`✅ Luz registrada: ${consumoKwh} kWh -> $${costoConIva} (incluye IVA)`);
-        
         document.getElementById('luz_final').value = '';
         renderConsumos();
     }
@@ -736,7 +755,7 @@
         const msg = document.getElementById('msg_sin_consumos');
         tbody.innerHTML = '';
         
-        const recientes = consumos.slice().reverse().slice(0, 20); // Últimos 20
+        const recientes = consumos.slice().reverse().slice(0, 20); 
         
         if (recientes.length === 0) {
             msg.style.display = 'block';
@@ -767,99 +786,96 @@
 
     // --- LIQUIDACION Y COBRANZA ---
     
-    // Paso 1: Preparar (Abrir modal de ajustes)
-    function prepararLiquidacion() {
+    // Paso 1: Abrir modal para editar gastos variables
+    function iniciarLiquidacion() {
         if (locales.length === 0) return alert("⚠️ Debes registrar al menos un local.");
         
         const mesSel = document.getElementById('mes_liquidacion').value;
-        const listaModal = document.getElementById('lista_gastos_modal');
-        listaModal.innerHTML = '';
-
-        // Copiar gastos fijos a temporales para edición
-        gastosTemporales = gastosFijos.map(g => ({...g}));
-
-        if (gastosTemporales.length === 0) {
-            listaModal.innerHTML = '<p class="text-gray-500 italic">No hay gastos fijos configurados.</p>';
+        const uf = getUF();
+        
+        // Clonar gastos fijos para editar temporalmente
+        gastosVariablesMes = gastosFijos.map(g => ({...g}));
+        
+        const container = document.getElementById('lista_gastos_editables');
+        container.innerHTML = '';
+        
+        if (gastosVariablesMes.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 italic">No hay gastos fijos configurados. El prorrateo será 0.</p>';
         } else {
-            gastosTemporales.forEach((g, index) => {
+            gastosVariablesMes.forEach((g, index) => {
                 const div = document.createElement('div');
-                div.className = "flex items-center gap-2 p-2 border rounded bg-gray-50";
+                div.className = "flex items-center gap-2 bg-white p-2 rounded border";
                 div.innerHTML = `
-                    <div class="flex-1">
-                        <p class="font-bold text-sm">${g.nombre} <span class="text-xs font-normal text-gray-500">(${g.tipo})</span></p>
-                    </div>
-                    <input type="number" value="${g.valor}" onchange="gastosTemporales[${index}].valor = parseFloat(this.value)" class="input-field w-32 text-right font-mono text-sm">
+                    <div class="flex-1 font-medium">${g.nombre} <span class="text-xs text-gray-500">(${g.tipo})</span></div>
+                    <input type="number" value="${g.valor}" onchange="gastosVariablesMes[${index}].valor = parseFloat(this.value)" class="input-field w-32 text-right" step="0.01">
                 `;
-                listaModal.appendChild(div);
+                container.appendChild(div);
             });
         }
-
+        
         document.getElementById('modal_gastos_vars').style.display = 'flex';
     }
 
     // Paso 2: Confirmar y Calcular
-    function confirmarLiquidacion() {
+    function confirmarYCalcular() {
         document.getElementById('modal_gastos_vars').style.display = 'none';
-        generarLiquidacion();
+        generarLiquidacionFinal();
     }
 
-    function generarLiquidacion() {
+    function generarLiquidacionFinal() {
         const uf = getUF();
-        if (uf === 0) return alert("La UF no puede ser 0.");
-        
         const mesSel = document.getElementById('mes_liquidacion').value;
+        if (uf === 0) return alert("La UF no puede ser 0.");
 
-        // 1. Calcular Gastos Comunes (Usando valores temporales editados)
+        // 1. Calcular Total Gastos Comunes en UF usando los valores editados
         let totalGC_UF = 0;
-        gastosTemporales.forEach(g => {
-            if (g.tipo === 'UF') {
-                totalGC_UF += g.valor;
-            } else {
-                // Convertir CLP a UF usando la UF del día
-                totalGC_UF += (g.valor / uf);
-            }
+        gastosVariablesMes.forEach(g => {
+            if (g.tipo === 'UF') totalGC_UF += g.valor;
+            else totalGC_UF += (g.valor / uf); // Convertir CLP a UF
         });
         
         const totalMetros = locales.reduce((sum, l) => sum + l.metros, 0);
-        if (totalMetros === 0) return alert("Error: Metros totales es 0");
-        
-        const factorGC_UF_m2 = totalGC_UF / totalMetros; // Factor en UF por m2
+        const factorGC = totalMetros > 0 ? totalGC_UF / totalMetros : 0; // UF por m2
 
-        // 2. Obtener Agua del Mes Selecionado
+        // 2. Obtener Agua del Mes (Costo Total)
         const regAgua = consumos.find(c => c.tipo === 'AGUA_GLOBAL' && c.mes === mesSel);
-        const totalAguaFactura = regAgua ? regAgua.valor : 0;
+        const totalAguaBruto = regAgua ? regAgua.valor : 0;
+        const totalAguaConIva = Math.round(totalAguaBruto * 1.19); // Agua con IVA
 
         // 3. Obtener Luz del Mes por Local
         const consumosLuz = consumos.filter(c => c.tipo === 'LUZ' && c.mes === mesSel);
 
         let filas = [];
         locales.forEach(loc => {
-            // A. Arriendo: (UF Base * UF Dia) + 19% IVA
+            // Arriendo: (UF Base * UF Dia) + 19% IVA
             const arriendoNetoPesos = loc.ufBase * uf;
             const arriendoConIva = Math.round(arriendoNetoPesos * 1.19);
             
-            // B. Gastos Comunes: (Factor UF/m2 * Metros Local) -> Resultado en UF -> Pasar a Pesos
-            const gcLocalUF = factorGC_UF_m2 * loc.metros;
+            // Gastos Comunes: (Factor UF/m2 * Metros Loca) -> Resultado en UF -> Convertir a Pesos
+            const gcLocalUF = factorGC * loc.metros;
             const gcLocalPesos = Math.round(gcLocalUF * uf);
             
-            // C. Agua: (Total Factura * % Local) + 19% IVA
+            // Agua: Porcentaje del total con IVA
             const porcAgua = loc.porcAgua || 0;
-            const aguaNeto = totalAguaFactura * (porcAgua / 100);
-            const aguaConIva = Math.round(aguaNeto * 1.19);
+            const aguaLocal = Math.round(totalAguaConIva * (porcAgua / 100));
             
-            // D. Luz: Valor registrado (ya incluye IVA)
+            // Luz
             const luzReg = consumosLuz.find(c => c.localId === loc.id);
             const luzLocal = luzReg ? luzReg.valor : 0;
 
-            const totalPagar = arriendoConIva + gcLocalPesos + aguaConIva + luzLocal;
+            const totalPagar = arriendoConIva + gcLocalPesos + aguaLocal + luzLocal;
 
-            // Estado previo
+            // Buscar estado previo
             let estadoPrevio = 'pendiente';
             let montoAbonadoPrevio = 0;
             let fechaPagoPrevio = '';
-
-            if (liquidacionActual && liquidacionActual.mes === mesSel) {
-                const prev = liquidacionActual.detalles.find(d => d.localId === loc.id);
+            
+            // Intentar cargar de localStorage si existe para este mes
+            const claveGuardado = `gb_liquidacion_${mesSel}`;
+            const datosGuardados = JSON.parse(localStorage.getItem(claveGuardado));
+            
+            if (datosGuardados && datosGuardados.detalles) {
+                const prev = datosGuardados.detalles.find(d => d.localId === loc.id);
                 if (prev) {
                     estadoPrevio = prev.estado;
                     montoAbonadoPrevio = prev.montoAbonado;
@@ -867,12 +883,27 @@
                 }
             }
 
+            // Guardar detalle de GC para el modal
+            const detalleGC = gastosVariablesMes.map(g => {
+                let valorEnUF = (g.tipo === 'UF') ? g.valor : (g.valor / uf);
+                let valorLocalUF = valorEnUF * (loc.metros / totalMetros); // Proporcional en UF
+                let valorLocalPesos = Math.round(valorLocalUF * uf);
+                return {
+                    concepto: g.nombre,
+                    valorUnitario: valorEnUF, // En UF
+                    totalLocal: valorLocalPesos // En Pesos
+                };
+            });
+
             filas.push({
                 localId: loc.id,
                 nombre: loc.nombre,
+                metros: loc.metros,
                 arriendo: arriendoConIva,
                 gc: gcLocalPesos,
-                agua: aguaConIva,
+                gcDetalle: detalleGC, // Para el modal
+                gcFactor: factorGC, // Para el modal
+                agua: aguaLocal,
                 luz: luzLocal,
                 total: totalPagar,
                 estado: estadoPrevio,
@@ -881,11 +912,35 @@
             });
         });
 
-        liquidacionActual = { mes: mesSel, detalles: filas };
+        liquidacionActual = { mes: mesSel, uf: uf, detalles: filas };
+        
+        // Guardar en localStorage
+        localStorage.setItem(`gb_liquidacion_${mesSel}`, JSON.stringify(liquidacionActual));
+        
         renderCobranza();
         document.getElementById('resultado_cobranza').classList.remove('hidden');
         document.getElementById('resultado_cobranza').scrollIntoView({ behavior: 'smooth' });
     }
+
+    function cargarLiquidacionGuardada() {
+        const mesSel = document.getElementById('mes_liquidacion').value;
+        if(!mesSel) return;
+        
+        const claveGuardado = `gb_liquidacion_${mesSel}`;
+        const datos = JSON.parse(localStorage.getItem(claveGuardado));
+        
+        if (datos) {
+            liquidacionActual = datos;
+            renderCobranza();
+            document.getElementById('resultado_cobranza').classList.remove('hidden');
+        } else {
+            // Si no hay datos para ese mes, ocultar resultados si estaban visibles de otro mes
+            // Opcional: document.getElementById('resultado_cobranza').classList.add('hidden');
+        }
+    }
+    
+    // Escuchar cambios en el mes para recargar datos
+    document.getElementById('mes_liquidacion').addEventListener('change', cargarLiquidacionGuardada);
 
     function renderCobranza() {
         if (!liquidacionActual) return;
@@ -908,9 +963,12 @@
                 <td class="text-right p-3 text-gray-600">$${fila.luz.toLocaleString()}</td>
                 <td class="text-right p-3 font-bold text-lg text-gray-900 bg-gray-50 border-l">$${fila.total.toLocaleString()}</td>
                 <td class="text-center p-3"><span class="badge ${claseEstado} font-bold px-3 py-1">${textoEstado}</span></td>
-                <td class="text-center p-3">
-                    <button onclick="abrirModalPago(${idx})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium shadow transition">
-                        <i class="fas fa-money-bill-wave mr-1"></i> Gestionar
+                <td class="text-center p-3 space-x-2">
+                    <button onclick="abrirModalDetalleGC(${idx})" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium shadow" title="Ver Detalle GC">
+                        <i class="fas fa-list-alt"></i> Detalle GC
+                    </button>
+                    <button onclick="abrirModalPago(${idx})" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium shadow">
+                        <i class="fas fa-money-bill-wave"></i> Pagar
                     </button>
                 </td>
             `;
@@ -918,6 +976,99 @@
         });
     }
 
+    // --- MODAL DETALLE GC ---
+    let indiceLocalActualGC = -1;
+
+    function abrirModalDetalleGC(idx) {
+        indiceLocalActualGC = idx;
+        const fila = liquidacionActual.detalles[idx];
+        
+        document.getElementById('gc_modal_titulo').innerText = `Detalle GC: ${fila.nombre}`;
+        
+        let html = `
+            <div class="bg-blue-50 p-4 rounded border border-blue-200 mb-4">
+                <p class="text-sm text-blue-800"><strong>Total Gastos Comunes:</strong> $${fila.gc.toLocaleString()}</p>
+                <p class="text-sm text-blue-800"><strong>Metros del Local:</strong> ${fila.metros} m²</p>
+                <p class="text-sm text-blue-800"><strong>Factor Prorrateo:</strong> ${fila.gcFactor.toFixed(6)} UF/m²</p>
+                <p class="text-sm text-blue-800"><strong>UF Utilizada:</strong> $${liquidacionActual.uf.toLocaleString('es-CL')}</p>
+            </div>
+            
+            <h4 class="font-bold text-gray-700 mb-2 border-b pb-1">Desglose por Concepto</h4>
+            <table class="w-full text-sm">
+                <thead class="bg-gray-100 text-gray-600">
+                    <tr>
+                        <th class="p-2 text-left">Concepto</th>
+                        <th class="p-2 text-right">Valor Unit. (UF)</th>
+                        <th class="p-2 text-right">Total Local ($)</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        fila.gcDetalle.forEach(item => {
+            html += `
+                <tr class="border-b">
+                    <td class="p-2">${item.concepto}</td>
+                    <td class="p-2 text-right font-mono">${item.valorUnitario.toFixed(4)}</td>
+                    <td class="p-2 text-right font-bold text-gray-800">$${item.totalLocal.toLocaleString()}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                </tbody>
+            </table>
+        `;
+        
+        document.getElementById('gc_contenido').innerHTML = html;
+        document.getElementById('modal_detalle_gc').style.display = 'flex';
+    }
+
+    function descargarDetalleGCLocal() {
+        if (indiceLocalActualGC === -1 || !liquidacionActual) return;
+        
+        const fila = liquidacionActual.detalles[indiceLocalActualGC];
+        const nombreArchivo = `GC_${fila.nombre.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(16);
+        doc.text(`Detalle Gastos Comunes - ${fila.nombre}`, 14, 20);
+        
+        doc.setFontSize(11);
+        doc.text(`Mes: ${liquidacionActual.mes}`, 14, 30);
+        doc.text(`UF Utilizada: $${liquidacionActual.uf.toLocaleString('es-CL')}`, 14, 36);
+        
+        doc.line(14, 40, 196, 40);
+        
+        doc.text(`Total Asignado: $${fila.gc.toLocaleString()}`, 14, 50);
+        doc.text(`Metros Cuadrados: ${fila.metros} m²`, 14, 56);
+        doc.text(`Factor de Prorrateo: ${fila.gcFactor.toFixed(6)} UF/m²`, 14, 62);
+        
+        const tableData = fila.gcDetalle.map(item => [
+            item.concepto,
+            item.valorUnitario.toFixed(4),
+            item.totalLocal.toLocaleString()
+        ]);
+        
+        doc.autoTable({
+            startY: 70,
+            head: [['Concepto', 'Valor Unit. (UF)', 'Total Local ($)']],
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: [79, 70, 229] }, // Indigo
+            columnStyles: {
+                0: { cellWidth: 80 },
+                1: { halign: 'right', cellWidth: 40 },
+                2: { halign: 'right', cellWidth: 40, fontStyle: 'bold' }
+            }
+        });
+        
+        doc.save(nombreArchivo);
+    }
+
+    // --- MODAL PAGO ---
     function abrirModalPago(idx) {
         const fila = liquidacionActual.detalles[idx];
         document.getElementById('pago_index').value = idx;
@@ -942,11 +1093,15 @@
         fila.montoAbonado = parseFloat(document.getElementById('pago_monto').value) || 0;
         fila.fechaPago = document.getElementById('pago_fecha').value;
         
+        // Guardar en localStorage
+        const mesSel = liquidacionActual.mes;
+        localStorage.setItem(`gb_liquidacion_${mesSel}`, JSON.stringify(liquidacionActual));
+        
         renderCobranza();
         document.getElementById('modal_pago').style.display = 'none';
     }
 
-    function descargarPDF() {
+    function descargarPDFGeneral() {
         if (!liquidacionActual) return;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -961,7 +1116,7 @@
         doc.setTextColor(0, 0, 0);
         doc.text(`Mes: ${liquidacionActual.mes}`, 14, 30);
         doc.text(`Fecha Emisión: ${new Date().toLocaleDateString()}`, 14, 36);
-        doc.text(`UF Utilizada: $${getUF().toLocaleString('es-CL')}`, 14, 42);
+        doc.text(`UF Utilizada: $${liquidacionActual.uf.toLocaleString('es-CL')}`, 14, 42);
         
         doc.line(14, 46, 196, 46);
 
